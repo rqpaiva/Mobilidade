@@ -31,7 +31,7 @@ def load_geojson_to_mongo(file_path, collection_name):
     db[collection_name].insert_many(geojson_data['features'])
 
 # Carregar arquivos GeoJSON ao iniciar o app
-@app.before_first_request
+@app.before_request
 def load_initial_geojson():
     # Confirme que os arquivos estão no diretório correto antes de rodar o app
     load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_data')
