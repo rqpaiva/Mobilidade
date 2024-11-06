@@ -1,10 +1,6 @@
-import json
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, render_template, g
 from flask_cors import CORS
 from pymongo import MongoClient
-import requests
-from datetime import datetime, timedelta
-from bson.json_util import dumps
 import os
 import logging
 import pandas as pd
@@ -14,8 +10,6 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Variáveis de ambiente e configurações
 mongo_uri = os.getenv('MONGO_URI')
-FOGO_EMAIL = os.getenv('FOGO_EMAIL')
-FOGO_PASSWORD = os.getenv('FOGO_PASSWORD')
 
 app = Flask(__name__)
 CORS(app)
@@ -37,29 +31,14 @@ def teardown_mongo_client(exception):
     if mongo_client is not None:
         mongo_client.close()
 
-# Função para carregar GeoJSON no MongoDB
-def load_geojson_to_mongo(file_path, collection_name):
+# Rota principal para a página inicial
+@app.route('/')
+def home():
     try:
-        logging.info(f"Carregando arquivo GeoJSON: {file_path}")
-        with open(file_path) as f:
-            geojson_data = json.load(f)
-        client = get_mongo_client()
-        db = client['mobility_data']
-        db[collection_name].insert_many(geojson_data['features'])
-        logging.info(f"GeoJSON {file_path} carregado com sucesso na coleção {collection_name}.")
+        return render_template('index.html')  # Certifique-se de que o arquivo 'index.html' está na pasta 'templates'
     except Exception as e:
-        logging.error(f"Erro ao carregar GeoJSON {file_path}: {e}")
-        raise
-
-# Rota para carregar dados GeoJSON sob demanda
-@app.route('/load_geojson', methods=['POST'])
-def load_geojson():
-    try:
-        load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_data')
-        load_geojson_to_mongo('data/Censo_2022__População_e_domicílios_por_bairros_(dados_preliminares).geojson', 'geo_data')
-        return jsonify({'success': 'GeoJSON carregado com sucesso!'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Erro ao renderizar a página inicial: {e}")
+        return jsonify({'error': 'Falha ao carregar a página inicial'}), 500
 
 # Rota para upload de arquivo CSV
 @app.route('/upload', methods=['POST'])
@@ -92,61 +71,6 @@ def upload_file():
 
     logging.warning("Tipo de arquivo não suportado.")
     return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
-
-# Rotas para consulta de dados
-@app.route('/get_rides', methods=['GET'])
-def get_rides():
-    try:
-        client = get_mongo_client()
-        db = client['mobility_data']
-        rides = list(db['rides'].find())
-        logging.info("Consulta de rides realizada com sucesso.")
-        return dumps(rides), 200
-    except Exception as e:
-        logging.error(f"Erro ao consultar rides: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/get_geo_data', methods=['GET'])
-def get_geo_data():
-    try:
-        client = get_mongo_client()
-        db = client['mobility_data']
-        geo_data = list(db['geo_data'].find())
-        logging.info("Consulta de geo_data realizada com sucesso.")
-        return dumps(geo_data), 200
-    except Exception as e:
-        logging.error(f"Erro ao consultar geo_data: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# Rota para atualizar ocorrências
-@app.route('/update_occurrences', methods=['GET'])
-def update_occurrences():
-    try:
-        # Autenticar e obter dados da API Fogo Cruzado
-        refresh_token()
-        url = f"{FOGO_CRUZADO_API_URL}/occurrences"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        params = {"page": 1, "take": 100}
-        all_data = []
-        while True:
-            response = requests.get(url, headers=headers, params=params)
-            if response.status_code == 200:
-                data = response.json()
-                all_data.extend(data['data'])
-                if not data['pageMeta']['hasNextPage']:
-                    break
-                params['page'] += 1
-            else:
-                logging.error("Falha ao buscar dados da API.")
-                return jsonify({'error': 'Falha ao buscar dados da API'}), 500
-        client = get_mongo_client()
-        db = client['mobility_data']
-        db['occurrences'].insert_many(all_data)
-        logging.info(f"{len(all_data)} ocorrências atualizadas com sucesso.")
-        return jsonify({'success': f'{len(all_data)} ocorrências atualizadas com sucesso'}), 200
-    except Exception as e:
-        logging.error(f"Erro ao atualizar ocorrências: {e}")
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
