@@ -4,6 +4,12 @@ from pymongo import MongoClient
 import requests
 from datetime import datetime, timedelta
 from bson.json_util import dumps
+import os
+
+mongo_uri = os.getenv('MONGO_URI')
+FOGO_EMAIL = os.getenv('FOGO_EMAIL')
+FOGO_PASSWORD = os.getenv('FOGO_PASSWORD')
+
 
 
 app = Flask(__name__)
@@ -60,8 +66,6 @@ def upload_file():
 
 # Configurações da API Fogo Cruzado
 FOGO_CRUZADO_API_URL = "https://api-service.fogocruzado.org.br/api/v2"
-EMAIL = "raquel.paiva@edu.unirio.br"
-PASSWORD = "!Gu5t4v1nh0!"
 access_token = None
 token_expiry = None
 
@@ -69,7 +73,7 @@ token_expiry = None
 def authenticate():
     global access_token, token_expiry
     url = f"{FOGO_CRUZADO_API_URL}/auth/login"
-    payload = {"email": EMAIL, "password": PASSWORD}
+    payload = {"email": FOGO_EMAIL, "password": FOGO_PASSWORD}
     response = requests.post(url, json=payload)
     if response.status_code == 201:
         data = response.json()['data']
@@ -118,6 +122,22 @@ def update_occurrences():
         return jsonify({'error': str(e)}), 500
 
 # Rota para consultar ocorrências armazenadas
+@app.route('/get_rides', methods=['GET'])
+def get_rides():
+    try:
+        rides = list(db['rides'].find())
+        return dumps(rides), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get_geo_data', methods=['GET'])
+def get_geo_data():
+    try:
+        geo_data = list(db['geo_data'].find())
+        return dumps(geo_data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/get_occurrences', methods=['GET'])
 def get_occurrences():
     try:
@@ -126,7 +146,21 @@ def get_occurrences():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Ponto de entrada do aplicativo
-if __name__ == '__main__':
-    authenticate()  # Autentica ao iniciar o servidor
-    app.run(debug=True)
+@app.route('/get_filtered_occurrences', methods=['GET'])
+def get_filtered_occurrences():
+    try:
+        query = {}
+        if 'state' in request.args:
+            query['state.name'] = request.args['state']
+        if 'city' in request.args:
+            query['city.name'] = request.args['city']
+        if 'start_date' in request.args and 'end_date' in request.args:
+            query['date'] = {
+                "$gte": request.args['start_date'],
+                "$lte": request.args['end_date']
+            }
+        occurrences = list(db['occurrences'].find(query))
+        return dumps(occurrences), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
