@@ -3,105 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visão Estratégica de Cancelamentos em Apps de Transporte</title>
+    <title>Visão Estratégica de Cancelamentos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div>
-            <h1>Visão Estratégica de Cancelamentos <br> em Apps de Transporte</h1>
-            <img src="{{ url_for('static', filename='img/eccb17e445d1417595732e3a62df4f28.jpg') }}" alt="">
-        </div>
+    <div class="d-flex">
+        <!-- Menu Lateral -->
+        <nav class="menu-lateral bg-light border-right" style="width: 250px; padding: 20px;">
+            <h4>Menu</h4>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#csv-section">Carregar Arquivo CSV</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#geojson-favelas">Atualizar GeoJSON - Favelas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#geojson-censo">Atualizar GeoJSON - Censo</a>
+                </li>
+            </ul>
+        </nav>
 
-        <!-- Upload de Arquivo CSV -->
-        <div class="container-upload">
-            <h3>Upload de Arquivo CSV</h3>
-            <form id="uploadCsvForm" enctype="multipart/form-data" method="POST" action="/upload_csv">
-                <label for="csvFileInput" class="custom-file-label">
-                    Selecione um arquivo CSV
-                </label>
-                <input type="file" id="csvFileInput" name="file" accept=".csv" required>
-                <button type="submit" class="btn btn-primary mt-2">Enviar CSV</button>
-            </form>
-        </div>
+        <!-- Conteúdo Principal -->
+        <div class="container-fluid" style="margin-left: 250px; padding: 20px;">
+            <h1>Visão Estratégica de Cancelamentos <br> em Apps de Mobilidade</h1>
+            <p>O sistema possui dados do Censo 2022 e das Áreas de Favelas e Comunidades de 2024.</p>
+            <p>Caso você disponha de dados mais atualizados, pode carregá-los abaixo.</p>
 
-        <!-- Upload de Arquivo GeoJSON (Favelas) -->
-        <div class="container-upload mt-4">
-            <h3>Upload de Arquivo GeoJSON - Favelas</h3>
-            <form id="uploadFavelasForm" enctype="multipart/form-data" method="POST" action="/upload_favelas">
-                <button type="submit" class="btn btn-success">Carregar GeoJSON de Favelas</button>
-            </form>
-        </div>
+            <!-- Upload CSV -->
+            <section id="csv-section">
+                <h3>Carregar Arquivo CSV</h3>
+                <form id="uploadCSVForm" enctype="multipart/form-data" method="POST" action="/upload">
+                    <input type="file" id="csvFile" name="file" accept=".csv" required>
+                    <button type="submit" class="btn btn-primary mt-2">Enviar CSV</button>
+                </form>
+            </section>
 
-        <!-- Upload de Arquivo GeoJSON (Censo) -->
-        <div class="container-upload mt-4">
-            <h3>Upload de Arquivo GeoJSON - Censo</h3>
-            <form id="uploadCensoForm" enctype="multipart/form-data" method="POST" action="/upload_censo">
-                <button type="submit" class="btn btn-warning">Carregar GeoJSON do Censo</button>
-            </form>
+            <hr>
+
+            <!-- Upload GeoJSON Favelas -->
+            <section id="geojson-favelas">
+                <h3>Atualizar GeoJSON - Favelas</h3>
+                <form id="uploadFavelasForm" enctype="multipart/form-data" method="POST" action="/upload_favelas">
+                    <input type="file" id="favelasFile" name="file" accept=".geojson" required>
+                    <button type="submit" class="btn btn-success mt-2">Carregar GeoJSON de Favelas</button>
+                </form>
+            </section>
+
+            <hr>
+
+            <!-- Upload GeoJSON Censo -->
+            <section id="geojson-censo">
+                <h3>Atualizar GeoJSON - Censo</h3>
+                <form id="uploadCensoForm" enctype="multipart/form-data" method="POST" action="/upload_censo">
+                    <input type="file" id="censoFile" name="file" accept=".geojson" required>
+                    <button type="submit" class="btn btn-warning mt-2">Carregar GeoJSON do Censo</button>
+                </form>
+            </section>
         </div>
     </div>
 
-    <!-- Tabela de Dados -->
-    <div class="containerTable mt-5">
-        <div id="data">
-            <h3>Dados do Arquivo</h3>
-            {% if data %}
-                <div>
-                    <label for="statusFilter">Filtrar por Status:</label>
-                    <select id="statusFilter" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="Cancelada pelo Passageiro">Cancelada pelo Passageiro</option>
-                        <option value="Finalizada">Finalizada</option>
-                        <option value="Cancelada pelo Taxista">Cancelada pelo Taxista</option>
-                    </select>
-                </div>
-                <div id="table-container">{{ data | safe }}</div>  
-            {% else %}
-                <p>Nenhum arquivo carregado ainda.</p>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" integrity="sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
-    <!-- Script para DataTable -->
-    <script>
-        $(document).ready(function() {
-            if ($('#table-container table').length) {  
-                var table = $('#table-container table').DataTable({
-                    "pageLength": 20, 
-                    "language": {
-                        "lengthMenu": "Mostrar _MENU_ linhas por página",
-                        "zeroRecords": "Nenhum dado encontrado",
-                        "info": "Mostrando página _PAGE_ de _PAGES_",
-                        "infoEmpty": "Nenhum dado disponível",
-                        "infoFiltered": "(filtrado de _MAX_ total de registros)",
-                        "search": "Buscar:",
-                        "paginate": {
-                            "first": "Primeiro",
-                            "last": "Último",
-                            "next": "Próximo",
-                            "previous": "Anterior"
-                        }
-                    }
-                });
-
-                $('#statusFilter').on('change', function() {
-                    var selectedValue = $(this).val();
-                    table.column(0).search(selectedValue).draw();  
-                });
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='scripts/script.js') }}"></script>
 </body>
 </html>
