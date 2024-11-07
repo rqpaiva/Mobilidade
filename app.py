@@ -11,15 +11,9 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Variáveis de ambiente e configurações
 mongo_uri = os.getenv('MONGO_URI', "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority&ssl=true")
-FOGO_EMAIL = os.getenv('FOGO_EMAIL')
-FOGO_PASSWORD = os.getenv('FOGO_PASSWORD')
-FOGO_CRUZADO_API_URL = os.getenv('FOGO_CRUZADO_API_URL')
-
+UPLOAD_FOLDER = 'upload_files/'
 app = Flask(__name__)
 CORS(app)
-
-# Configuração do diretório de upload
-UPLOAD_FOLDER = 'upload_files/'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Função para obter o cliente MongoDB no contexto atual
@@ -35,16 +29,7 @@ def teardown_mongo_client(exception):
     if mongo_client is not None:
         mongo_client.close()
 
-# Rota principal para a página inicial
-@app.route('/')
-def home():
-    try:
-        return render_template('index.html')
-    except Exception as e:
-        logging.error(f"Erro ao renderizar a página inicial: {e}")
-        return jsonify({'error': 'Falha ao carregar a página inicial'}), 500
-
-# Função para inserir dados em lotes no MongoDB
+# Função para inserir dados em lotes
 def insert_in_batches(data, collection_name, batch_size=500):
     try:
         client = get_mongo_client()
@@ -58,9 +43,33 @@ def insert_in_batches(data, collection_name, batch_size=500):
         logging.error(f"Erro ao inserir dados em lotes: {e}")
         raise
 
+# Função para carregar GeoJSON no MongoDB
+def load_geojson_to_mongo(file_path, collection_name):
+    try:
+        logging.info(f"Carregando arquivo GeoJSON: {file_path}")
+        with open(file_path) as f:
+            geojson_data = json.load(f)
+        client = get_mongo_client()
+        db = client['mobility_data']
+        db[collection_name].delete_many({})  # Limpa os dados antigos
+        db[collection_name].insert_many(geojson_data['features'])
+        logging.info(f"GeoJSON {file_path} carregado com sucesso na coleção {collection_name}.")
+    except Exception as e:
+        logging.error(f"Erro ao carregar GeoJSON {file_path}: {e}")
+        raise
+
+# Rota principal para a página inicial
+@app.route('/')
+def home():
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logging.error(f"Erro ao renderizar a página inicial: {e}")
+        return jsonify({'error': 'Falha ao carregar a página inicial'}), 500
+
 # Rota para upload de arquivo CSV
-@app.route('/upload', methods=['POST'])
-def upload_file():
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
     if 'file' not in request.files:
         logging.warning("Nenhum arquivo enviado.")
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
@@ -72,11 +81,19 @@ def upload_file():
 
     if file and file.filename.endswith('.csv'):
         try:
+            # Verifica se o diretório de upload existe
+            if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                os.makedirs(app.config['UPLOAD_FOLDER'])
+
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(file_path)
 
             # Processar o CSV e armazenar no MongoDB em lotes
             data = pd.read_csv(file_path)
+            if data.empty:
+                logging.warning("O arquivo CSV está vazio.")
+                return jsonify({'error': 'O arquivo CSV está vazio.'}), 400
+
             json_data = data.to_dict(orient='records')
             insert_in_batches(json_data, 'rides')
             logging.info(f"Arquivo {file.filename} carregado e processado com sucesso.")
@@ -88,27 +105,24 @@ def upload_file():
     logging.warning("Tipo de arquivo não suportado.")
     return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
 
-# Função para carregar GeoJSON no MongoDB
-def load_geojson_to_mongo(file_path, collection_name):
+# Rota para upload do arquivo GeoJSON de favelas
+@app.route('/upload_favelas', methods=['POST'])
+def upload_favelas():
     try:
-        logging.info(f"Carregando arquivo GeoJSON: {file_path}")
-        with open(file_path) as f:
-            geojson_data = json.load(f)
-        insert_in_batches(geojson_data['features'], collection_name)
-        logging.info(f"GeoJSON {file_path} carregado com sucesso na coleção {collection_name}.")
+        load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_data_favelas')
+        return jsonify({'success': 'Arquivo de favelas carregado com sucesso!'}), 200
     except Exception as e:
-        logging.error(f"Erro ao carregar GeoJSON {file_path}: {e}")
-        raise
+        logging.error(f"Erro ao carregar arquivo de favelas: {e}")
+        return jsonify({'error': str(e)}), 500
 
-# Rota para carregar dados GeoJSON sob demanda
-@app.route('/load_geojson', methods=['POST'])
-def load_geojson():
+# Rota para upload do arquivo GeoJSON do censo
+@app.route('/upload_censo', methods=['POST'])
+def upload_censo():
     try:
-        load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_data')
-        load_geojson_to_mongo('data/Censo_2022__População_e_domicílios_por_bairros_(dados_preliminares).geojson', 'geo_data')
-        return jsonify({'success': 'GeoJSON carregado com sucesso!'}), 200
+        load_geojson_to_mongo('data/Censo_2022__População_e_domicílios_por_bairros_(dados_preliminares).geojson', 'geo_data_censo')
+        return jsonify({'success': 'Arquivo do censo carregado com sucesso!'}), 200
     except Exception as e:
-        logging.error(f"Erro ao carregar GeoJSON: {e}")
+        logging.error(f"Erro ao carregar arquivo do censo: {e}")
         return jsonify({'error': str(e)}), 500
 
 # Rotas para consulta de dados
@@ -129,11 +143,15 @@ def get_geo_data():
     try:
         client = get_mongo_client()
         db = client['mobility_data']
-        geo_data = list(db['geo_data'].find())
-        logging.info("Consulta de geo_data realizada com sucesso.")
-        return jsonify(geo_data), 200
+        geo_data_favelas = list(db['geo_data_favelas'].find())
+        geo_data_censo = list(db['geo_data_censo'].find())
+        logging.info("Consulta de dados GeoJSON realizada com sucesso.")
+        return jsonify({
+            'favelas': geo_data_favelas,
+            'censo': geo_data_censo
+        }), 200
     except Exception as e:
-        logging.error(f"Erro ao consultar geo_data: {e}")
+        logging.error(f"Erro ao consultar dados GeoJSON: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
