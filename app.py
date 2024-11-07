@@ -27,6 +27,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Função para obter o cliente MongoDB
 def get_mongo_client():
     if 'mongo_client' not in g:
+        logging.debug("Conectando ao MongoDB.")
         g.mongo_client = MongoClient(mongo_uri)
     return g.mongo_client
 
@@ -35,6 +36,7 @@ def get_mongo_client():
 def teardown_mongo_client(exception):
     mongo_client = g.pop('mongo_client', None)
     if mongo_client is not None:
+        logging.debug("Fechando conexão com o MongoDB.")
         mongo_client.close()
 
 # Página inicial
@@ -49,19 +51,21 @@ def home():
 # Upload de arquivo CSV
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
+    logging.debug("Recebendo requisição para upload de arquivo CSV.")
     if 'file' not in request.files:
-        logging.warning("Nenhum arquivo enviado.")
+        logging.warning("Nenhum arquivo enviado na requisição.")
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
 
     file = request.files['file']
     if file.filename == '':
-        logging.warning("Nome do arquivo inválido.")
-        return jsonify({'error': 'Nome do arquivo inválido'}), 400
+        logging.warning("O arquivo enviado não possui um nome válido.")
+        return jsonify({'error': 'O arquivo enviado não possui um nome válido.'}), 400
 
     if file and file.filename.endswith('.csv'):
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(file_path)
+            logging.info(f"Arquivo salvo no servidor: {file_path}")
 
             # Processar o CSV e armazenar no MongoDB
             data = pd.read_csv(file_path)
@@ -69,18 +73,20 @@ def upload_csv():
             client = get_mongo_client()
             db = client['mobility_data']
             db['rides'].insert_many(json_data)
-            logging.info(f"Arquivo {file.filename} carregado com sucesso.")
-            return jsonify({'success': 'Arquivo CSV carregado e armazenado com sucesso'}), 201
+
+            logging.info(f"Arquivo {file.filename} processado e armazenado no MongoDB com sucesso.")
+            return jsonify({'success': f"Arquivo {file.filename} carregado e armazenado com sucesso."}), 201
         except Exception as e:
             logging.error(f"Erro ao processar o arquivo CSV: {e}")
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': f"Erro ao processar o arquivo: {e}"}), 500
 
     logging.warning("Tipo de arquivo não suportado.")
-    return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
+    return jsonify({'error': 'Tipo de arquivo não suportado. Envie um arquivo CSV.'}), 400
 
 # Carregar dados da API Fogo Cruzado
 @app.route('/update_occurrences', methods=['POST'])
 def update_occurrences():
+    logging.debug("Recebendo requisição para atualizar ocorrências do Fogo Cruzado.")
     try:
         # Autenticar na API Fogo Cruzado
         response = requests.post(f"{FOGO_CRUZADO_API_URL}/auth", json={"email": FOGO_EMAIL, "password": FOGO_PASSWORD})
@@ -112,8 +118,9 @@ def update_occurrences():
         client = get_mongo_client()
         db = client['mobility_data']
         db['occurrences'].insert_many(all_data)
-        logging.info(f"{len(all_data)} ocorrências atualizadas com sucesso.")
-        return jsonify({'success': f'{len(all_data)} ocorrências atualizadas com sucesso'}), 200
+
+        logging.info(f"{len(all_data)} ocorrências do Fogo Cruzado atualizadas com sucesso.")
+        return jsonify({'success': f'{len(all_data)} ocorrências atualizadas com sucesso.'}), 200
     except Exception as e:
         logging.error(f"Erro ao atualizar ocorrências: {e}")
         return jsonify({'error': str(e)}), 500
@@ -121,6 +128,7 @@ def update_occurrences():
 # Consulta de dados CSV no MongoDB
 @app.route('/get_rides', methods=['GET'])
 def get_rides():
+    logging.debug("Recebendo requisição para consultar dados de corridas.")
     try:
         client = get_mongo_client()
         db = client['mobility_data']
@@ -133,6 +141,7 @@ def get_rides():
 # Consulta de ocorrências da API no MongoDB
 @app.route('/get_occurrences', methods=['GET'])
 def get_occurrences():
+    logging.debug("Recebendo requisição para consultar ocorrências.")
     try:
         client = get_mongo_client()
         db = client['mobility_data']
