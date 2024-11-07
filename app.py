@@ -45,7 +45,7 @@ def load_geojson_to_mongo(file_path, collection_name):
         raise
 
 # Carregar GeoJSONs ao iniciar o servidor
-@app.before_first_request
+@app.before_request
 def initialize_geojson_data():
     try:
         load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_favelas')
