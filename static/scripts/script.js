@@ -1,18 +1,29 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('fileInput');
-    const fileLabel = document.querySelector('.custom-file-label');
-    const textUpload = document.querySelector('.text-upload');
-    const buttonSubimit = document.querySelector('.buttonSubimit');
-
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('uploadForm');
     
-    fileInput.addEventListener('change', function() {
-        if (fileInput.files.length > 0) {
-            textUpload.textContent = fileInput.files[0].name;
-            fileLabel.classList.add('hidenButton');
-            buttonSubimit.classList.remove('hidenButton')
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        
+        const fileInput = document.getElementById('fileInput');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
 
-        } else {
-            fileLabel.textContent = 'Nenhum arquivo selecionado';
+        try {
+            const response = await fetch('/upload_csv', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.success || 'Arquivo enviado com sucesso!');
+            } else {
+                const error = await response.json();
+                alert(error.error || 'Erro ao enviar arquivo.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao conectar ao servidor.');
         }
     });
 });
