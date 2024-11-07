@@ -1,18 +1,30 @@
-import os
 from flask import Flask, request, jsonify, render_template, g
+from flask_cors import CORS
 from pymongo import MongoClient
+import os
 import logging
-import json
+import pandas as pd
+import requests
+from bson.json_util import dumps
 
 # Configuração de Logs
 logging.basicConfig(level=logging.DEBUG)
 
-# Variáveis de ambiente e configurações
+# Configurações do MongoDB e variáveis de ambiente
 mongo_uri = os.getenv('MONGO_URI')
+FOGO_EMAIL = os.getenv('FOGO_EMAIL')
+FOGO_PASSWORD = os.getenv('FOGO_PASSWORD')
+FOGO_CRUZADO_API_URL = os.getenv('FOGO_CRUZADO_API_URL')
 
 app = Flask(__name__)
+CORS(app)
 
-# Função para obter o cliente MongoDB no contexto atual
+# Diretório de upload
+UPLOAD_FOLDER = 'upload_files/'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Função para obter o cliente MongoDB
 def get_mongo_client():
     if 'mongo_client' not in g:
         g.mongo_client = MongoClient(mongo_uri)
@@ -25,71 +37,109 @@ def teardown_mongo_client(exception):
     if mongo_client is not None:
         mongo_client.close()
 
-# Função para carregar GeoJSON no MongoDB
-def load_geojson_to_mongo(file_path, collection_name):
+# Página inicial
+@app.route('/')
+def home():
     try:
-        logging.info(f"Carregando arquivo GeoJSON: {file_path}")
-        with open(file_path, encoding='utf-8') as f:
-            geojson_data = json.load(f)
-        client = get_mongo_client()
-        db = client['mobility_data']
-
-        # Verificar se a coleção está vazia antes de inserir os dados
-        if db[collection_name].count_documents({}) == 0:
-            db[collection_name].insert_many(geojson_data['features'])
-            logging.info(f"GeoJSON {file_path} carregado com sucesso na coleção {collection_name}.")
-        else:
-            logging.info(f"GeoJSON {collection_name} já possui dados. Nenhuma ação realizada.")
+        return render_template('index.html')
     except Exception as e:
-        logging.error(f"Erro ao carregar GeoJSON {file_path}: {e}")
-        raise
+        logging.error(f"Erro ao renderizar a página inicial: {e}")
+        return jsonify({'error': 'Página inicial não encontrada'}), 404
 
-# Carregar GeoJSONs ao iniciar o servidor
-@app.before_request
-def initialize_geojson_data():
-    try:
-        load_geojson_to_mongo('data/Limite_Favelas_2019.geojson', 'geo_favelas')
-        load_geojson_to_mongo('data/Censo_2022__População_e_domicílios_por_bairros_(dados_preliminares).geojson', 'geo_censo')
-    except Exception as e:
-        logging.error(f"Erro ao inicializar dados GeoJSON: {e}")
+# Upload de arquivo CSV
+@app.route('/upload_csv', methods=['POST'])
+def upload_csv():
+    if 'file' not in request.files:
+        logging.warning("Nenhum arquivo enviado.")
+        return jsonify({'error': 'Nenhum arquivo enviado'}), 400
 
-# Rota para carregar GeoJSONs sob demanda
-@app.route('/upload_geojson/<collection_name>', methods=['POST'])
-def upload_geojson(collection_name):
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'Nenhum arquivo enviado'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        logging.warning("Nome do arquivo inválido.")
+        return jsonify({'error': 'Nome do arquivo inválido'}), 400
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'Nome do arquivo inválido'}), 400
+    if file and file.filename.endswith('.csv'):
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(file_path)
 
-        if file and file.filename.endswith('.geojson'):
-            geojson_data = json.load(file)
+            # Processar o CSV e armazenar no MongoDB
+            data = pd.read_csv(file_path)
+            json_data = data.to_dict(orient='records')
             client = get_mongo_client()
             db = client['mobility_data']
+            db['rides'].insert_many(json_data)
+            logging.info(f"Arquivo {file.filename} carregado com sucesso.")
+            return jsonify({'success': 'Arquivo CSV carregado e armazenado com sucesso'}), 201
+        except Exception as e:
+            logging.error(f"Erro ao processar o arquivo CSV: {e}")
+            return jsonify({'error': str(e)}), 500
 
-            # Limpar dados antigos e inserir novos
-            db[collection_name].delete_many({})
-            db[collection_name].insert_many(geojson_data['features'])
-            logging.info(f"GeoJSON enviado e carregado na coleção {collection_name}.")
-            return jsonify({'success': f'GeoJSON carregado na coleção {collection_name} com sucesso'}), 200
-        else:
-            return jsonify({'error': 'Formato de arquivo inválido. Envie um arquivo .geojson'}), 400
+    logging.warning("Tipo de arquivo não suportado.")
+    return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
+
+# Carregar dados da API Fogo Cruzado
+@app.route('/update_occurrences', methods=['POST'])
+def update_occurrences():
+    try:
+        # Autenticar na API Fogo Cruzado
+        response = requests.post(f"{FOGO_CRUZADO_API_URL}/auth", json={"email": FOGO_EMAIL, "password": FOGO_PASSWORD})
+        if response.status_code != 200:
+            logging.error("Falha na autenticação na API Fogo Cruzado.")
+            return jsonify({'error': 'Falha na autenticação na API Fogo Cruzado'}), 500
+
+        access_token = response.json().get('access_token')
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        # Buscar ocorrências
+        occurrences_url = f"{FOGO_CRUZADO_API_URL}/occurrences"
+        params = {"page": 1, "take": 100}
+        all_data = []
+
+        while True:
+            response = requests.get(occurrences_url, headers=headers, params=params)
+            if response.status_code == 200:
+                data = response.json()
+                all_data.extend(data['data'])
+                if not data['pageMeta']['hasNextPage']:
+                    break
+                params['page'] += 1
+            else:
+                logging.error("Falha ao buscar dados da API Fogo Cruzado.")
+                return jsonify({'error': 'Falha ao buscar dados da API Fogo Cruzado'}), 500
+
+        # Armazenar os dados no MongoDB
+        client = get_mongo_client()
+        db = client['mobility_data']
+        db['occurrences'].insert_many(all_data)
+        logging.info(f"{len(all_data)} ocorrências atualizadas com sucesso.")
+        return jsonify({'success': f'{len(all_data)} ocorrências atualizadas com sucesso'}), 200
     except Exception as e:
-        logging.error(f"Erro ao carregar GeoJSON na coleção {collection_name}: {e}")
+        logging.error(f"Erro ao atualizar ocorrências: {e}")
         return jsonify({'error': str(e)}), 500
 
-# Exemplo de rota para verificar os dados GeoJSON carregados
-@app.route('/get_geojson/<collection_name>', methods=['GET'])
-def get_geojson(collection_name):
+# Consulta de dados CSV no MongoDB
+@app.route('/get_rides', methods=['GET'])
+def get_rides():
     try:
         client = get_mongo_client()
         db = client['mobility_data']
-        geojson_data = list(db[collection_name].find())
-        return jsonify(geojson_data), 200
+        rides = list(db['rides'].find())
+        return dumps(rides), 200
     except Exception as e:
-        logging.error(f"Erro ao consultar GeoJSON da coleção {collection_name}: {e}")
+        logging.error(f"Erro ao consultar dados CSV: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# Consulta de ocorrências da API no MongoDB
+@app.route('/get_occurrences', methods=['GET'])
+def get_occurrences():
+    try:
+        client = get_mongo_client()
+        db = client['mobility_data']
+        occurrences = list(db['occurrences'].find())
+        return dumps(occurrences), 200
+    except Exception as e:
+        logging.error(f"Erro ao consultar ocorrências: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
