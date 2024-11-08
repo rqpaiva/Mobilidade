@@ -48,24 +48,21 @@ def home():
         logging.error(f"Erro ao renderizar a página inicial: {e}")
         return jsonify({'error': 'Página inicial não encontrada'}), 404
 
-# Upload de arquivo CSV
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
-    logging.debug("Recebendo requisição para upload de arquivo CSV.")
     if 'file' not in request.files:
-        logging.warning("Nenhum arquivo enviado na requisição.")
+        logging.warning("Nenhum arquivo enviado.")
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
 
     file = request.files['file']
     if file.filename == '':
-        logging.warning("O arquivo enviado não possui um nome válido.")
-        return jsonify({'error': 'O arquivo enviado não possui um nome válido.'}), 400
+        logging.warning("Nome do arquivo inválido.")
+        return jsonify({'error': 'Nome do arquivo inválido'}), 400
 
     if file and file.filename.endswith('.csv'):
         try:
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(file_path)
-            logging.info(f"Arquivo salvo no servidor: {file_path}")
 
             # Processar o CSV e armazenar no MongoDB
             data = pd.read_csv(file_path)
@@ -73,15 +70,14 @@ def upload_csv():
             client = get_mongo_client()
             db = client['mobility_data']
             db['rides'].insert_many(json_data)
-
-            logging.info(f"Arquivo {file.filename} processado e armazenado no MongoDB com sucesso.")
-            return jsonify({'success': f"Arquivo {file.filename} carregado e armazenado com sucesso."}), 201
+            logging.info(f"Arquivo {file.filename} carregado com sucesso.")
+            return jsonify({'success': 'Arquivo CSV carregado e armazenado com sucesso'}), 201
         except Exception as e:
             logging.error(f"Erro ao processar o arquivo CSV: {e}")
-            return jsonify({'error': f"Erro ao processar o arquivo: {e}"}), 500
+            return jsonify({'error': str(e)}), 500
 
     logging.warning("Tipo de arquivo não suportado.")
-    return jsonify({'error': 'Tipo de arquivo não suportado. Envie um arquivo CSV.'}), 400
+    return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
 
 # Carregar dados da API Fogo Cruzado
 @app.route('/update_occurrences', methods=['POST'])
