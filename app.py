@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify, render_template, g
 from flask_cors import CORS
 from pymongo import MongoClient
+from werkzeug.utils import secure_filename
 import os
 import logging
 import pandas as pd
 import requests
 from bson.json_util import dumps
+from datetime import datetime, timedelta
+import json
 
 # Configuração de Logs
 logging.basicConfig(level=logging.DEBUG)
@@ -24,30 +27,69 @@ UPLOAD_FOLDER = 'upload_files/'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Função para obter o cliente MongoDB
-def get_mongo_client():
-    if 'mongo_client' not in g:
-        logging.debug("Conectando ao MongoDB.")
-        g.mongo_client = MongoClient(mongo_uri)
-    return g.mongo_client
+# Conexão com MongoDB
+client = MongoClient(mongo_uri)
+db = client["mobility_data"]
 
-# Encerrar o cliente MongoDB ao finalizar a requisição
-@app.teardown_appcontext
-def teardown_mongo_client(exception):
-    mongo_client = g.pop('mongo_client', None)
-    if mongo_client is not None:
-        logging.debug("Fechando conexão com o MongoDB.")
-        mongo_client.close()
-
-# Página inicial
-@app.route('/')
-def home():
+# Função para autenticação na API
+def authenticate():
     try:
-        return render_template('index.html')
+        response = requests.post(
+            f"{FOGO_CRUZADO_API_URL}/auth/login",
+            json={"email": FOGO_EMAIL, "password": FOGO_PASSWORD},
+        )
+        response.raise_for_status()
+        return response.json()["data"]["accessToken"]
     except Exception as e:
-        logging.error(f"Erro ao renderizar a página inicial: {e}")
-        return jsonify({'error': 'Página inicial não encontrada'}), 404
+        logging.error(f"Erro ao autenticar na API Fogo Cruzado: {e}")
+        return None
 
+# Função para carregar dados no MongoDB
+def store_data_in_mongo(collection_name, data):
+    try:
+        collection = db[collection_name]
+        if data:
+            collection.insert_many(data, ordered=False)
+            logging.info(f"{len(data)} registros inseridos na coleção {collection_name}.")
+    except Exception as e:
+        logging.error(f"Erro ao salvar dados no MongoDB: {e}")
+
+# Conversão de CSV para GeoJSON
+def csv_to_geojson(data):
+    geojson_records = []
+
+    # Identificar padrões de coordenadas
+    for col in data.columns:
+        if "_lat" in col or "_lng" in col:
+            lat_col = col if "_lat" in col else col.replace("_lng", "_lat")
+            lng_col = col if "_lng" in col else col.replace("_lat", "_lng")
+            
+            if lat_col in data.columns and lng_col in data.columns:
+                for _, row in data.iterrows():
+                    if not pd.isnull(row[lat_col]) and not pd.isnull(row[lng_col]):
+                        geojson_records.append({
+                            "type": "Point",
+                            "coordinates": [row[lng_col], row[lat_col]],
+                            "properties": row.drop([lat_col, lng_col]).to_dict()
+                        })
+
+        elif "location" in col or "coordinates" in col:
+            # Lida com coordenadas combinadas no formato JSON
+            for _, row in data.iterrows():
+                try:
+                    location_data = json.loads(row[col])
+                    if isinstance(location_data, list) and len(location_data) == 2:
+                        geojson_records.append({
+                            "type": "Point",
+                            "coordinates": location_data,
+                            "properties": row.drop(col).to_dict()
+                        })
+                except (ValueError, TypeError):
+                    logging.warning(f"Dados de coordenadas inválidos na coluna {col} para a linha {row.to_dict()}")
+
+    return geojson_records
+
+# Upload de arquivo CSV (dois formatos)
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     if 'file' not in request.files:
@@ -61,17 +103,23 @@ def upload_csv():
 
     if file and file.filename.endswith('.csv'):
         try:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
             file.save(file_path)
 
-            # Processar o CSV e armazenar no MongoDB
             data = pd.read_csv(file_path)
-            json_data = data.to_dict(orient='records')
-            client = get_mongo_client()
-            db = client['mobility_data']
-            db['rides'].insert_many(json_data)
-            logging.info(f"Arquivo {file.filename} carregado com sucesso.")
-            return jsonify({'success': 'Arquivo CSV carregado e armazenado com sucesso'}), 201
+
+            # 1. Inserir dados no formato GeoJSON
+            geojson_data = csv_to_geojson(data)
+            store_data_in_mongo("rides_geojson", geojson_data)
+
+            # 2. Inserir dados preservando as variáveis originais
+            original_data = data.to_dict(orient="records")
+            store_data_in_mongo("rides_original", original_data)
+
+            logging.info(f"Arquivo {file.filename} carregado com sucesso em ambos os formatos.")
+            return jsonify({
+                'success': 'Arquivo CSV carregado e armazenado com sucesso em ambos os formatos'
+            }), 201
         except Exception as e:
             logging.error(f"Erro ao processar o arquivo CSV: {e}")
             return jsonify({'error': str(e)}), 500
@@ -79,72 +127,23 @@ def upload_csv():
     logging.warning("Tipo de arquivo não suportado.")
     return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
 
-# Carregar dados da API Fogo Cruzado
-@app.route('/update_occurrences', methods=['POST'])
-def update_occurrences():
-    logging.debug("Recebendo requisição para atualizar ocorrências do Fogo Cruzado.")
+# Consulta de dados CSV no MongoDB (dois formatos)
+@app.route('/get_rides_geojson', methods=['GET'])
+def get_rides_geojson():
     try:
-        # Autenticar na API Fogo Cruzado
-        response = requests.post(f"{FOGO_CRUZADO_API_URL}/auth", json={"email": FOGO_EMAIL, "password": FOGO_PASSWORD})
-        if response.status_code != 200:
-            logging.error("Falha na autenticação na API Fogo Cruzado.")
-            return jsonify({'error': 'Falha na autenticação na API Fogo Cruzado'}), 500
-
-        access_token = response.json().get('access_token')
-        headers = {"Authorization": f"Bearer {access_token}"}
-
-        # Buscar ocorrências
-        occurrences_url = f"{FOGO_CRUZADO_API_URL}/occurrences"
-        params = {"page": 1, "take": 100}
-        all_data = []
-
-        while True:
-            response = requests.get(occurrences_url, headers=headers, params=params)
-            if response.status_code == 200:
-                data = response.json()
-                all_data.extend(data['data'])
-                if not data['pageMeta']['hasNextPage']:
-                    break
-                params['page'] += 1
-            else:
-                logging.error("Falha ao buscar dados da API Fogo Cruzado.")
-                return jsonify({'error': 'Falha ao buscar dados da API Fogo Cruzado'}), 500
-
-        # Armazenar os dados no MongoDB
-        client = get_mongo_client()
-        db = client['mobility_data']
-        db['occurrences'].insert_many(all_data)
-
-        logging.info(f"{len(all_data)} ocorrências do Fogo Cruzado atualizadas com sucesso.")
-        return jsonify({'success': f'{len(all_data)} ocorrências atualizadas com sucesso.'}), 200
+        data = list(db["rides_geojson"].find())
+        return dumps(data), 200
     except Exception as e:
-        logging.error(f"Erro ao atualizar ocorrências: {e}")
+        logging.error(f"Erro ao consultar dados GeoJSON: {e}")
         return jsonify({'error': str(e)}), 500
 
-# Consulta de dados CSV no MongoDB
-@app.route('/get_rides', methods=['GET'])
-def get_rides():
-    logging.debug("Recebendo requisição para consultar dados de corridas.")
+@app.route('/get_rides_original', methods=['GET'])
+def get_rides_original():
     try:
-        client = get_mongo_client()
-        db = client['mobility_data']
-        rides = list(db['rides'].find())
-        return dumps(rides), 200
+        data = list(db["rides_original"].find())
+        return dumps(data), 200
     except Exception as e:
-        logging.error(f"Erro ao consultar dados CSV: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# Consulta de ocorrências da API no MongoDB
-@app.route('/get_occurrences', methods=['GET'])
-def get_occurrences():
-    logging.debug("Recebendo requisição para consultar ocorrências.")
-    try:
-        client = get_mongo_client()
-        db = client['mobility_data']
-        occurrences = list(db['occurrences'].find())
-        return dumps(occurrences), 200
-    except Exception as e:
-        logging.error(f"Erro ao consultar ocorrências: {e}")
+        logging.error(f"Erro ao consultar dados originais: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
