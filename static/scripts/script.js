@@ -1,36 +1,18 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('uploadForm');
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const fileLabel = document.querySelector('.custom-file-label');
+    const textUpload = document.querySelector('.text-upload');
+    const buttonSubimit = document.querySelector('.buttonSubimit');
 
-    form.addEventListener('submit', async function (event) {
-        event.preventDefault(); // Evita o reload da página
+    
+    fileInput.addEventListener('change', function() {
+        if (fileInput.files.length > 0) {
+            textUpload.textContent = fileInput.files[0].name;
+            fileLabel.classList.add('hidenButton');
+            buttonSubimit.classList.remove('hidenButton')
 
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0]; // Pega o arquivo selecionado
-
-        if (!file) {
-            alert('Por favor, selecione um arquivo para fazer o upload.');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const response = await fetch('/upload_csv', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                document.getElementById('message').textContent = result.success || 'Upload realizado com sucesso!';
-            } else {
-                const error = await response.json();
-                document.getElementById('message').textContent = error.error || 'Erro no upload.';
-            }
-        } catch (err) {
-            console.error(err);
-            document.getElementById('message').textContent = 'Erro ao conectar ao servidor.';
+        } else {
+            fileLabel.textContent = 'Nenhum arquivo selecionado';
         }
     });
 });
