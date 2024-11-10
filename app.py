@@ -5,7 +5,7 @@ import os
 import logging
 import pandas as pd
 from bson.json_util import dumps
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
 # Configuração de Logs
@@ -44,10 +44,12 @@ def authenticate():
         return None
 
 # Função para buscar dados da API
-def fetch_data_from_api(token, initial_date, final_date, page=1, take=100):
+def fetch_data_from_api(token, state_id, city_ids, initial_date, final_date, page=1, take=100):
     try:
         headers = {"Authorization": f"Bearer {token}"}
         params = {
+            "idState": state_id,
+            "idCities": ",".join(city_ids) if city_ids else None,
             "initialdate": initial_date,
             "finaldate": final_date,
             "page": page,
@@ -64,6 +66,8 @@ def fetch_data_from_api(token, initial_date, final_date, page=1, take=100):
 def store_data_in_mongo(data):
     try:
         if data:
+            for record in data:
+                record["inserido_em"] = datetime.now()
             events_collection.insert_many(data)
             logging.info(f"{len(data)} registros inseridos no MongoDB.")
     except Exception as e:
@@ -77,22 +81,40 @@ def load_incremental_data():
         if not token:
             return jsonify({"error": "Falha na autenticação"}), 500
 
-        # Determinar a última data registrada no MongoDB
-        last_entry = events_collection.find_one(sort=[("date", -1)])
-        start_date = last_entry["date"] if last_entry else "2016-07-01"
-        end_date = datetime.now().strftime("%Y-%m-%d")
+        # Dados fornecidos na requisição
+        data = request.json
+        state_id = data.get("state_id")
+        city_ids = data.get("city_ids", [])
+        last_date = data.get("last_date", None)
 
-        logging.info(f"Carregando dados de {start_date} a {end_date}")
-        page = 1
-        while True:
-            result = fetch_data_from_api(token, start_date, end_date, page=page)
+        if not state_id:
+            return jsonify({"error": "State ID é obrigatório"}), 400
+
+        # Determinar a última data registrada no MongoDB ou a data fornecida
+        if not last_date:
+            last_entry = events_collection.find_one(sort=[("date", -1)])
+            last_date = last_entry["date"] if last_entry else "2016-07-01"
+
+        start_date = datetime.strptime(last_date, "%Y-%m-%d") + timedelta(days=1)
+        end_date = datetime.now()
+        current_date = start_date
+
+        # Loop para buscar dados mês a mês
+        while current_date < end_date:
+            next_date = current_date + timedelta(days=30)
+            logging.info(f"Carregando dados de {current_date.strftime('%Y-%m-%d')} a {next_date.strftime('%Y-%m-%d')}")
+            result = fetch_data_from_api(
+                token,
+                state_id,
+                city_ids,
+                current_date.strftime("%Y-%m-%d"),
+                next_date.strftime("%Y-%m-%d"),
+            )
             if result and "data" in result:
                 store_data_in_mongo(result["data"])
                 if not result.get("pageMeta", {}).get("hasNextPage", False):
                     break
-                page += 1
-            else:
-                break
+            current_date = next_date
 
         return jsonify({"message": "Carga incremental concluída com sucesso"}), 200
     except Exception as e:
