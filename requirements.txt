@@ -4,3 +4,4 @@ pymongo
 pandas
 flask-cors
 requests
+haversine
