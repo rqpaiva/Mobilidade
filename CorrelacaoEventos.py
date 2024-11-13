@@ -1,3 +1,4 @@
+import os  # Adicione esta linha
 from pymongo import MongoClient
 from haversine import haversine, Unit
 from datetime import datetime, timedelta
@@ -7,6 +8,7 @@ import logging
 MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client["mobility_data"]
+
 
 def get_event_correlations(radius, date, start_time, end_time, status_filter):
     """
