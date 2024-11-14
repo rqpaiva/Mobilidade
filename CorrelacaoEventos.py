@@ -22,7 +22,7 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
         # Consultar cancelamentos no MongoDB
         query = {"created_at": {"$gte": start_datetime, "$lte": end_datetime}}
         if status_filter:
-            query["status"] = {"$regex": status_filter}
+            query["status"] = {"$regex": status_filter, "$options": "i"}
 
         cancellations = list(db.rides_original.find(query))
         events = list(db.events.find())
@@ -44,6 +44,25 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
                         "distance_km": distance,
                         "time_diff_min": time_diff
                     })
+
+        # Caso nenhum evento seja encontrado, buscar eventos nos últimos 7 dias
+        if not nearby_events:
+            seven_days_ago = start_datetime - timedelta(days=7)
+            recent_events_query = {"date": {"$gte": seven_days_ago, "$lte": start_datetime}}
+            recent_events = list(db.events.find(recent_events_query))
+
+            return {
+                "message": "Nenhum evento identificado na data e horário da corrida. Seguem eventos dos últimos 7 dias.",
+                "recent_events": [
+                    {
+                        "event_location": (event['latitude'], event['longitude']),
+                        "event_name": event['mainReason']['name'],
+                        "event_date": event['date']
+                    }
+                    for event in recent_events
+                ]
+            }
+
         return nearby_events
     except Exception as e:
         logging.error(f"Erro na função de correlação de eventos: {e}")
