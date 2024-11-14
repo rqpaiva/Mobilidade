@@ -215,8 +215,14 @@ def events_near_cancellations():
         end_time = request.args.get('end_time', '23:59')
         status_filter = request.args.get('status', None)  # Exemplo: 'cancelada pelo taxista'
 
-        # Chamar a função de correlação de eventos do módulo CorrelacaoEventos
+        if not date:
+            return jsonify({'error': 'O parâmetro "date" é obrigatório.'}), 400
+
+        # Chamar a função de correlação de eventos
         correlations = get_event_correlations(radius, date, start_time, end_time, status_filter)
+
+        if "message" in correlations:  # Fallback
+            return jsonify(correlations), 200
 
         return jsonify(correlations), 200
     except Exception as e:
