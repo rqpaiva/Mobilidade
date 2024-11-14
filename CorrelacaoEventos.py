@@ -11,9 +11,6 @@ db = client["mobility_data"]
 
 
 def get_event_correlations(radius, date, start_time, end_time, status_filter):
-    """
-    Função para correlacionar eventos com cancelamentos de corridas.
-    """
     try:
         # Formatar data e hora
         start_datetime = datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M")
@@ -39,7 +36,12 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
                     nearby_events.append({
                         "cancel_id": cancel['_id'],
                         "cancel_location": origin,
+                        "cancel_address": cancel.get('road_client', 'Desconhecido'),
+                        "cancel_bairro": cancel.get('suburb_client', 'Desconhecido'),
                         "event_location": event_loc,
+                        "event_address": event.get('address', 'Desconhecido'),
+                        "event_neighborhood": event.get('neighborhood', 'Desconhecido'),
+                        "event_locality": event.get('locality', 'Desconhecido'),
                         "event_name": event['mainReason']['name'],
                         "distance_km": distance,
                         "time_diff_min": time_diff
@@ -56,6 +58,9 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
                 "recent_events": [
                     {
                         "event_location": (event['latitude'], event['longitude']),
+                        "event_address": event.get('address', 'Desconhecido'),
+                        "event_neighborhood": event.get('neighborhood', 'Desconhecido'),
+                        "event_locality": event.get('locality', 'Desconhecido'),
                         "event_name": event['mainReason']['name'],
                         "event_date": event['date']
                     }
