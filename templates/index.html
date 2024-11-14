@@ -80,5 +80,26 @@
     <!-- Scripts personalizados -->
     <script src="{{ url_for('static', filename='scripts/script.js') }}"></script> <!-- Já validado -->
     <script src="{{ url_for('static', filename='scripts/visualization.js') }}"></script> <!-- Novo para visualização -->
+	
+	<div id="table-container" style="margin-top: 20px;">
+    <h3>Dados Correlacionados</h3>
+    <table id="data-table" class="display" style="width:100%; display:none;">
+        <thead>
+            <tr>
+                <th>ID Cancelamento</th>
+                <th>Endereço Cancelamento</th>
+                <th>Bairro Cancelamento</th>
+                <th>Endereço Evento</th>
+                <th>Bairro Evento</th>
+                <th>Nome do Evento</th>
+                <th>Distância (km)</th>
+                <th>Diferença de Tempo (min)</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+
 </body>
 </html>
