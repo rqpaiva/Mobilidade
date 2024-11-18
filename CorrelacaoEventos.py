@@ -3,6 +3,8 @@ from pymongo import MongoClient
 from haversine import haversine
 from datetime import datetime, timedelta
 import logging
+import traceback
+
 
 # Configuração do MongoDB
 MONGO_URI = os.getenv("MONGO_URI")
@@ -79,5 +81,6 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
         return correlations if correlations else {"message": "Nenhum evento correlacionado encontrado."}
 
     except Exception as e:
-        logging.error(f"Erro ao buscar correlações: {e}")
-        raise
+        logging.error(f"Erro ao buscar correlações: {e
+        logging.error(traceback.format_exc())  # Adicionar rastreamento detalhado
+        return {"error": f"Erro interno no servidor: {e}"}
