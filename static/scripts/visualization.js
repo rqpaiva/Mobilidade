@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.recent_events.forEach((event) => {
                     // Adicionar eventos recentes ao mapa
                     L.circle(event.event_location, {
-                        radius: 500, // Raio em metros
+                        radius: 500,
                         color: 'blue'
                     }).addTo(map)
                         .bindPopup(`Evento: ${event.event_name}<br>Endereço: ${event.event_address}<br>Bairro: ${event.event_neighborhood}`);
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .bindPopup(`Cancelamento: ${item.cancel_address}<br>Bairro: ${item.cancel_bairro}`);
 
                 L.circle(item.event_location, {
-                    radius: 500, // Raio em metros
+                    radius: 500,
                     color: 'red'
                 }).addTo(map)
                     .bindPopup(`Evento: ${item.event_name}<br>Endereço: ${item.event_address}<br>Bairro: ${item.event_neighborhood}`);
