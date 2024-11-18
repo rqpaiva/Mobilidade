@@ -81,6 +81,6 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
         return correlations if correlations else {"message": "Nenhum evento correlacionado encontrado."}
 
     except Exception as e:
-        logging.error(f"Erro ao buscar correlações: {e
+        logging.error(f"Erro ao buscar correlações: {e}")
         logging.error(traceback.format_exc())  # Adicionar rastreamento detalhado
         return {"error": f"Erro interno no servidor: {e}"}
