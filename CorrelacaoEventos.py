@@ -1,6 +1,6 @@
-import os  # Adicione esta linha
+import os
 from pymongo import MongoClient
-from haversine import haversine, Unit
+from haversine import haversine
 from datetime import datetime, timedelta
 import logging
 
@@ -9,21 +9,18 @@ MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client["mobility_data"]
 
-
 def get_event_correlations(radius, date, start_time, end_time, status_filter):
     try:
-        # Converter data e hora para objetos datetime
+        # Conversão de tipos
+        radius = float(radius)
         start_datetime = datetime.strptime(f"{date} {start_time}", "%Y-%m-%d %H:%M")
         end_datetime = datetime.strptime(f"{date} {end_time}", "%Y-%m-%d %H:%M")
 
-        logging.info(f"Consultando cancelamentos entre {start_datetime} e {end_datetime}...")
+        logging.info(f"Parâmetros recebidos: radius={radius}, date={date}, start_time={start_time}, end_time={end_time}, status={status_filter}")
 
         # Consulta para cancelamentos
         query = {
-            "created_at": {
-                "$gte": start_datetime,
-                "$lte": end_datetime
-            }
+            "created_at": {"$gte": start_datetime, "$lte": end_datetime}
         }
         if status_filter:
             query["status"] = {"$regex": status_filter, "$options": "i"}
@@ -33,20 +30,32 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
 
         # Consulta para eventos
         event_query = {
-            "date": {
-                "$gte": start_datetime,
-                "$lte": end_datetime
-            }
+            "date": {"$gte": start_datetime, "$lte": end_datetime}
         }
         events = list(db.events.find(event_query))
         logging.info(f"Número de eventos encontrados: {len(events)}")
 
-        # Caso nenhum evento ou cancelamento seja encontrado
-        if not cancellations and not events:
-            logging.warning("Nenhum dado encontrado para os filtros aplicados.")
-            return {"message": "Nenhum dado encontrado para os filtros aplicados."}
+        # Caso nenhum evento seja encontrado, buscar eventos recentes (últimos 7 dias)
+        if not events:
+            recent_date = start_datetime - timedelta(days=7)
+            recent_events_query = {
+                "date": {"$gte": recent_date, "$lte": start_datetime}
+            }
+            recent_events = list(db.events.find(recent_events_query))
+            logging.info(f"Número de eventos recentes encontrados: {len(recent_events)}")
+            return {
+                "message": "Nenhum evento identificado na data e horário da corrida. Seguem eventos dos últimos 7 dias na região.",
+                "recent_events": [
+                    {
+                        "event_address": event["address"],
+                        "event_neighborhood": event.get("neighborhood", "-"),
+                        "event_name": event.get("name", "-"),
+                        "event_location": [event.get("latitude"), event.get("longitude")]
+                    } for event in recent_events
+                ]
+            }
 
-        # Lógica de correlação entre cancelamentos e eventos
+        # Correlacionar cancelamentos com eventos
         correlations = []
         for cancel in cancellations:
             origin = (cancel['origin_lat'], cancel['origin_lng'])
@@ -57,11 +66,12 @@ def get_event_correlations(radius, date, start_time, end_time, status_filter):
 
                 if distance <= radius:
                     correlations.append({
-                        "cancel_id": cancel["_id"],
-                        "cancel_location": origin,
-                        "cancel_time": cancel["created_at"],
-                        "event_location": event_loc,
-                        "event_time": event["date"],
+                        "cancel_id": str(cancel["_id"]),
+                        "cancel_address": cancel.get("road_client", "-"),
+                        "cancel_bairro": cancel.get("suburb_client", "-"),
+                        "event_address": event.get("address", "-"),
+                        "event_neighborhood": event.get("neighborhood", "-"),
+                        "event_name": event.get("name", "-"),
                         "distance_km": distance,
                         "time_diff_min": time_diff
                     })
