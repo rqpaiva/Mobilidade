@@ -63,6 +63,5 @@ Werkzeug==3.0.6
 widgetsnbextension==4.0.13
 plotly
 flask_session
-secrets
-dash.dependencies
-dash
+dash==2.11.0
+dash-bootstrap-components==1.5.2
