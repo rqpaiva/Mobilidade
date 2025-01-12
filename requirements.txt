@@ -34,7 +34,7 @@ matplotlib-inline==0.1.7
 networkx==3.4.2
 nltk==3.9.1
 numpy==2.1.2
-packaging==24.1
+packaging==24.3.1
 pandas==2.2.3
 parso==0.8.4
 pillow==11.0.0
@@ -66,4 +66,3 @@ flask_session
 secrets
 dash.dependencies
 dash
-pip install --upgrade pip
