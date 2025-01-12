@@ -66,3 +66,4 @@ flask_session
 secrets
 dash.dependencies
 dash
+pip install --upgrade pip
