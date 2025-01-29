@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Correlacionamento de dados</title>
     <style>
         body {
@@ -31,8 +34,18 @@
     </style>
 </head>
 <body>
+    <!-- Menu de Navegação -->
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/analise-espacial">Análise Espacial</a></li>
+            <li><a href="/analise-temporal">Análise Temporal</a></li>
+            <li><a href="/analise-pessoal">Análise Pessoal</a></li>
+            <li><a href="/dados-correlacionados">Dados Correlacionados</a></li>
+        </ul>
+    </nav>
     <div class="iframe-container">
-        <iframe src="https://charts.mongodb.com/charts-project-0-xtxmdyw/embed/dashboards?id=1e4a1b11-500a-4df7-9e4a-2978c14990f7&theme=dark&autoRefresh=true&maxDataAge=3600&showTitleAndDesc=false&scalingWidth=scale&scalingHeight=scale"></iframe>
+        <iframe src="https://charts.mongodb.com/charts-project-0-xtxmdyw/embed/dashboards?id=1e4a1b11-500a-4df7-9e4a-2978c14990f7&theme=dark&autoRefresh=true&maxDataAge=3600&showTitleAndDesc=false&scalingWidth=fixed&scalingHeight=fixed"></iframe>
     </div>
 </body>
 </html>
