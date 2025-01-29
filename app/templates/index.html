@@ -1,1 +1,58 @@
-<!DOCTYPE html><html><head><link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet" /><link href="./css/main.css" rel="stylesheet" /><title>Document</title></head><body><div class="v1_17"><span class="v5_3">Visão Estratégica de Cancelamentos em Apps de Transporte</span><div class="v15_30"><div class="v15_31"><div class="v15_32"><div class="v15_33"></div></div><span class="v15_34">Análise pessoal</span></div><div class="v15_35"><div class="v15_36"><div class="v15_37"></div></div><span class="v15_38">Análise temporal</span></div><div class="v15_39"><div class="v15_40"><div class="v15_41"></div></div><span class="v15_42">Análise espacial</span></div><div class="v15_43"><div class="v15_44"><div class="v15_45"></div></div><span class="v15_46">Análise sociodemográfica</span></div><div class="v15_47"><div class="v15_48"><div class="v15_49"></div></div><span class="v15_50">Impacto da violência urbana</span></div><div class="v15_51"><div class="v15_52"><div class="v15_53"><div class="v15_54"></div><div class="v15_55"></div></div></div><span class="v15_56">Impacto de eventos na cidade</span></div></div><div class="v15_20"></div><div class="v15_21"><div class="v15_22"><div class="v15_23"><div class="v15_24"><div class="v15_25"></div><div class="v15_26"></div></div></div><span class="v15_27">Faça upload do arquivo para ver a analise completa</span></div><div class="v15_28"><span class="v15_29">Selecionar um arquivo</span></div></div></div></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visão Estratégica de Cancelamentos</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</head>
+<body>
+    <div class="v1_17">
+        <span class="v5_3">Visão Estratégica de Cancelamentos em Apps de Mobilidade</span>
+        
+        <!-- Navegação -->
+        <nav>
+            <ul>
+                <li><a href="/">Página Inicial</a></li>
+                <li><a href="/analise-espacial">Análise Espacial</a></li>
+                <li><a href="/analise-temporal">Análise Temporal</a></li>
+                <li><a href="/analise-pessoal">Análise Pessoal</a></li>
+                <li><a href="/dados-correlacionados">Dados Correlacionados</a></li>
+            </ul>
+        </nav>
+
+        <!-- Seções com links -->
+        <div class="v15_30">
+            <div class="v15_31"></div>
+            <span class="v15_34"><a href="/analise-pessoal">Análise Pessoal</a></span>
+        </div>
+        <div class="v15_35">
+            <div class="v15_36"></div>
+            <span class="v15_38"><a href="/analise-temporal">Análise Temporal</a></span>
+        </div>
+        <div class="v15_39">
+            <div class="v15_40"></div>
+            <span class="v15_42"><a href="/analise-espacial">Análise Espacial</a></span>
+        </div>
+        <div class="v15_43">
+            <div class="v15_44"></div>
+            <span class="v15_46"><a href="/dados-correlacionados">Dados Correlacionados</a></span>
+        </div>
+
+        <!-- Seção de Upload -->
+        <div class="v15_21">
+            <div class="container-upload">
+                <form id="uploadForm" action="/upload_csv" method="POST" enctype="multipart/form-data">
+                    <div class="icon-upload">⬆</div>
+                    <label for="fileInput" class="custom-file-label">Selecionar Arquivo</label>
+                    <input type="file" id="fileInput" name="file">
+                    <button type="submit" class="buttonSubimit hidenButton">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
