@@ -1,5 +1,5 @@
 from app import app, db
-from flask import render_template, request, jsonify, session, redirect
+from flask import Flask, render_template, request, jsonify, redirect, session
 from flask_cors import CORS
 from pymongo import MongoClient
 import pandas as pd
