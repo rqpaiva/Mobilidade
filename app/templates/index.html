@@ -1,48 +1,68 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visão Estratégica de Cancelamentos</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  </head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+</head>
 <body>
-    <div class="frame">
-        <ul class="menu">
-            <li><a href="/">Home</a></li>
-            <li><a href="/analise-temporal">Análise Temporal</a></li>
-            <li><a href="/analise-pessoal">Análise Pessoal</a></li>
-            <li><a href="/dados-correlacionados">Dados Correlacionados</a></li>
-        </ul>
+    <div class="v1_17">
+        <span class="v5_3">Visão Estratégica de Cancelamentos em Apps de Mobilidade</span>
 
-        <div class="div">
-            <img class="img" src="images/ix-barchart.svg" alt="Ícone Análise Pessoal"/>
-            <a href="/analise-pessoal" class="text-wrapper link">Análise Pessoal</a>
+        <!-- Seções com links -->
+        <div class="v15_30">
+            <div class="v15_31"></div>
+            <span class="v15_34"><a href="/analise-pessoal">Análise Pessoal</a></span>
         </div>
-        
-        <div class="div">
-            <img class="img" src="images/mdi-clock.svg" alt="Ícone Análise Temporal"/>
-            <a href="/analise-temporal" class="text-wrapper link">Análise Temporal</a>
+        <div class="v15_35">
+            <div class="v15_36"></div>
+            <span class="v15_38"><a href="/analise-temporal">Análise Temporal</a></span>
+        </div>
+        <div class="v15_39">
+            <div class="v15_40"></div>
+            <span class="v15_42"><a href="/analise-espacial">Análise Espacial</a></span>
+        </div>
+        <div class="v15_43">
+            <img class="img" src="images/fluent-mdl2-financial.svg"/>
+            <div class="v15_44"></div>
+            <span class="v15_46"><a href="/dados-correlacionados">Análise Sociodemográfica</a></span>
+        </div>
+        <div class="15_47">
+            <img class="img" src="images/jam-triangle-danger-f.svg"/>
+            <div class="v15_48"></div>
+            <span class="v15_50"><a href="/impacto-violencia-urbana" class="text-wrapper link">Impacto da Violência Urbana</a></span>
         </div>
 
-        <div class="div">
-            <img class="img" src="images/material-symbols-globe.svg" alt="Ícone Análise Espacial"/>
-            <a href="/analise-espacial" class="text-wrapper link">Análise Espacial</a>
+        <div class="15_53">
+            <img class="img" src="images/tabler-calendar-filled.svg"/>
+            <div class="v15_54"></div>
+            <span class="v15_56"><a href="/impacto-eventos" class="text-wrapper link">Impacto de Eventos na Cidade</a></span>
         </div>
+
+        <!-- Seção de Upload -->
+        <div class="v15_21">
+            <div class="container-upload">
+                <form id="uploadForm" action="/upload_csv" method="POST" enctype="multipart/form-data">
+                    <div class="icon-upload">⬆</div>
+                    <label for="fileInput" class="custom-file-label">Selecionar Arquivo</label>
+                    <input type="file" id="fileInput" name="file">
+                    <button type="submit" class="buttonSubimit hidenButton">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
         <div class="div">
             <img class="img" src="images/fluent-mdl2-financial.svg" alt="Ícone Análise Sociodemográfica"/>
             <a href="/analise-sociodemografica" class="text-wrapper link">Análise Sociodemográfica</a>
         </div>
 
-        <div class="div">
-            <img class="img" src="images/jam-triangle-danger-f.svg" alt="Ícone Impacto da Violência Urbana"/>
-            <a href="/impacto-violencia-urbana" class="text-wrapper link">Impacto da Violência Urbana</a>
-        </div>
-
-        <div class="div">
-            <img class="img" src="images/tabler-calendar-filled.svg" alt="Ícone Impacto de Eventos na Cidade"/>
-            <a href="/impacto-eventos" class="text-wrapper link">Impacto de Eventos na Cidade</a>
-        </div>
-    </div>
 </body>
 </html>
