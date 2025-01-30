@@ -87,3 +87,7 @@ def analise_pessoal():
 @app.route('/dados-correlacionados')
 def dados_correlacionados():
     return render_template('dados_correlacionados.html')
+
+@app.route('/impacto_eventos')
+def dados_correlacionados():
+    return render_template('impacto_eventos.html')
