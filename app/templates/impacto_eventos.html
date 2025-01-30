@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impacto dos Eventos nos Cancelamentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Impacto dos Eventos na Cidade nos Cancelamentos</h1>
+        <form id="filterForm">
+            <div class="form-group">
+                <label for="distancia">Distância Máxima (km):</label>
+                <input type="number" id="distancia" name="distancia" value="5" step="0.1" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="tempo">Janela Temporal (horas):</label>
+                <input type="number" id="tempo" name="tempo" value="2" step="0.1" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-primary">Atualizar</button>
+        </form>
+        <h2 class="mt-4">Estatísticas por Bairro</h2>
+        <div id="tabela-container"></div>
+        <h2 class="mt-4">Mapa de Cancelamentos</h2>
+        <div id="mapa-container"></div>
+    </div>
+
+    <script>
+        function atualizarDados() {
+            const distancia = document.getElementById("distancia").value;
+            const tempo = document.getElementById("tempo").value;
+
+            fetch(`https://mobilidade.onrender.com/dados?distancia=${distancia}&tempo=${tempo}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("tabela-container").innerHTML = data.tabela_html;
+                document.getElementById("mapa-container").innerHTML = data.mapa_html;
+            })
+            .catch(error => {
+                console.error('Erro ao carregar os dados:', error);
+                document.getElementById("tabela-container").innerHTML = "<p class='alert alert-danger'>Erro ao carregar os dados.</p>";
+                document.getElementById("mapa-container").innerHTML = "<p class='alert alert-danger'>Erro ao carregar o mapa.</p>";
+            });
+        }
+
+        document.getElementById("filterForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            atualizarDados();
+        });
+
+        window.onload = atualizarDados;
+    </script>
+</body>
+</html>
