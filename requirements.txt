@@ -66,3 +66,4 @@ flask_session
 dash==2.9.3
 dash-bootstrap-components==1.4.2
 flask-pymongo==2.3.0
+haversine==2.8.0
