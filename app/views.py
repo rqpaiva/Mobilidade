@@ -89,5 +89,5 @@ def dados_correlacionados():
     return render_template('dados_correlacionados.html')
 
 @app.route('/impacto_eventos')
-def dados_correlacionados():
+def impacto_eventos():
     return render_template('impacto_eventos.html')
