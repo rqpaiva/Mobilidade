@@ -6,6 +6,8 @@ import pandas as pd
 import os
 import logging
 from datetime import datetime
+from app.Impacto_eventos import get_data
+
 
 # Configurações do MongoDB e variáveis de ambiente
 MONGO_URI = os.getenv("MONGO_URI")
