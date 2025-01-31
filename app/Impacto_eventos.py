@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, Blueprint, jsonify, request
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -40,6 +40,8 @@ ocorrencias_com_tipo = ocorrencias_data.merge(
 # Inicializar Flask
 app = Flask(__name__)
 
+# Criação do blueprint
+app = Blueprint("impacto_eventos", __name__)
 
 @app.route('/dados', methods=['GET'])
 def get_data():
