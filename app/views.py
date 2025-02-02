@@ -1,13 +1,11 @@
-from app import app, db
-from flask import Flask, render_template, request, jsonify, redirect, session
-from flask_cors import CORS
-from pymongo import MongoClient
-import pandas as pd
-import os
 import logging
-from datetime import datetime
-from app.Impacto_eventos import get_data
+import os
 
+import pandas as pd
+from flask import render_template, request, jsonify, Blueprint
+from flask_cors import CORS
+
+from app import app, db
 
 # Configurações do MongoDB e variáveis de ambiente
 MONGO_URI = os.getenv("MONGO_URI")
@@ -15,17 +13,9 @@ FOGO_EMAIL = os.getenv("FOGO_EMAIL")
 FOGO_PASSWORD = os.getenv("FOGO_PASSWORD")
 FOGO_CRUZADO_API_URL = os.getenv("FOGO_CRUZADO_API_URL")
 
-app = Flask(__name__)
+index_app = Blueprint("index_app", __name__)
 CORS(app)
 
-# Diretório de upload
-UPLOAD_FOLDER = 'upload_files/'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Conexão com MongoDB
-client = MongoClient(MONGO_URI)
-db = client["mobility_data"]
 events_collection = db["events"]
 
 # Configurações de logs
@@ -37,12 +27,12 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Página inicial
-@app.route('/')
+@index_app.route('/')
 def home():
     return render_template('index.html')
 
 # Upload de arquivos CSV
-@app.route('/upload_csv', methods=['POST'])
+@index_app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     if 'file' not in request.files:
         logging.warning("Nenhum arquivo enviado.")
@@ -74,22 +64,24 @@ def upload_csv():
     return jsonify({'error': 'Tipo de arquivo não suportado. Envie um CSV'}), 400
 
 # Rotas para páginas específicas
-@app.route('/analise-espacial')
+@index_app.route('/analise-espacial')
 def analise_espacial():
     return render_template('analise_espacial.html')
 
-@app.route('/analise-temporal')
+@index_app.route('/analise-temporal')
 def analise_temporal():
     return render_template('analise_temporal.html')
 
-@app.route('/analise-pessoal')
+@index_app.route('/analise-pessoal')
 def analise_pessoal():
     return render_template('analise_pessoal.html')
 
-@app.route('/dados-correlacionados')
+@index_app.route('/dados-correlacionados')
 def dados_correlacionados():
     return render_template('dados_correlacionados.html')
 
-@app.route('/impacto_eventos')
+@index_app.route('/impacto_eventos')
 def impacto_eventos():
     return render_template('impacto_eventos.html')
+
+app.register_blueprint(index_app, url_prefix="/")

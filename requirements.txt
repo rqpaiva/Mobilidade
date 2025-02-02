@@ -34,7 +34,7 @@ matplotlib==3.9.2
 matplotlib-inline==0.1.7
 networkx==3.4.2
 nltk==3.9.1
-numpy==1.23.5
+numpy==1.26.4
 packaging==24.1
 pandas==2.2.3
 parso==0.8.4
@@ -69,5 +69,5 @@ dash-bootstrap-components==1.4.2
 flask-pymongo==2.3.0
 haversine==2.8.0
 python-dotenv
-scikit-learn==1.2.2
+scikit-learn==1.5.0
 folium==0.14.0
