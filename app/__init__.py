@@ -11,8 +11,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Registro do blueprint
-app.register_blueprint(impacto_eventos_app)
-
+app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
 
 # Configurações de upload
 UPLOAD_FOLDER = 'upload_files/'
