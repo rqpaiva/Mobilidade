@@ -51,13 +51,13 @@ ocorrencias_com_tipo = ocorrencias_data.merge(
 )
 
 # Inicializar Flask
-app = Flask(__name__)
+impacto_eventos_app = Flask(__name__)
 
 # Criação do blueprint
-app = Blueprint("impacto_eventos", __name__, url_prefix="/impacto_eventos")
+impacto_eventos_app = Blueprint("impacto_eventos", __name__, url_prefix="/impacto_eventos")
 
 
-@app.route('/dados', methods=['GET', 'POST'])
+@impacto_eventos_app.route('/dados', methods=['GET', 'POST'])
 def get_data():
     try:
         distancia_maxima_km = float(request.args.get('distancia', 5))
@@ -130,4 +130,6 @@ def get_data():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
+
