@@ -15,8 +15,8 @@ FOGO_EMAIL = os.getenv("FOGO_EMAIL")
 FOGO_PASSWORD = os.getenv("FOGO_PASSWORD")
 FOGO_CRUZADO_API_URL = os.getenv("FOGO_CRUZADO_API_URL")
 
-app = Flask(__name__)
-CORS(app)
+#app = Flask(__name__)
+#CORS(app)
 
 # Diretório de upload
 UPLOAD_FOLDER = 'upload_files/'
