@@ -33,7 +33,7 @@
             const distancia = document.getElementById("distancia").value;
             const tempo = document.getElementById("tempo").value;
 
-            fetch(`https://mobilidade.onrender.com/dados?distancia=${distancia}&tempo=${tempo}`)
+            fetch(`https://mobilidade.onrender.com/impacto_eventos/dados?distancia=${distancia}&tempo=${tempo}`)
             .then(response => response.json())
             .then(data => {
                 document.getElementById("tabela-container").innerHTML = data.tabela_html;
