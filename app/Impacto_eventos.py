@@ -27,8 +27,6 @@ db = client['mobility_data']
 
 impacto_eventos_app = Blueprint("impacto_eventos_app", __name__)
 
-rides_data = None
-ocorrencias_data = None
 
 # Função para calcular a distância entre duas coordenadas geográficas (em km)
 def calcular_distancia(coord1, coord2):
@@ -44,11 +42,7 @@ def calcular_distancia(coord1, coord2):
 
 
 def get_ocorrencias_data():
-    global ocorrencias_data
-    if ocorrencias_data is not None:
-        return ocorrencias_data
-
-    logger.info("Carregando dados do MongoDB...")
+    logger.info("Carregando ocorrencias_data do MongoDB...")
     ocorrencias_data = pd.DataFrame(list(db['ocorrencias'].find()))
     pop_data = pd.DataFrame(list(db['procedimento_operacional_padrao'].find()))
 
@@ -62,12 +56,7 @@ def get_ocorrencias_data():
     return ocorrencias_data
 
 def get_rides_data():
-    global rides_data
-    if rides_data is not None:
-        return rides_data
-
-    rides_data = pd.DataFrame(list(db['rides_original'].find()))
-    return rides_data
+    return pd.DataFrame(list(db['rides_original'].find()))
 
 @impacto_eventos_app.route('/dados', methods=['GET', 'POST'])
 def get_data():
@@ -82,7 +71,7 @@ def get_data():
         ocorrencias_com_tipo = get_ocorrencias_data()
 
         for bairro, total_cancelamentos in rides.groupby('suburb_client').size().items():
-            cancelamentos_bairro = rides[rides_data['suburb_client'] == bairro]
+            cancelamentos_bairro = rides[rides['suburb_client'] == bairro]
             ocorrencias_bairro = ocorrencias_com_tipo[ocorrencias_com_tipo['bairro'] == bairro]
 
             if not ocorrencias_bairro.empty:
@@ -151,5 +140,5 @@ if __name__ == '__main__':
         app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
         app.run(host='0.0.0.0', port=port)
     except Exception as e:
-        logging.error(f"Erro subindo Impacto Eventos separadamente: ", e)
+        logging.error("Erro subindo Impacto Eventos separadamente: ", e)
 

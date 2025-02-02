@@ -3,18 +3,15 @@ import os
 
 import pandas as pd
 from flask import render_template, request, jsonify, Blueprint
-from flask_cors import CORS
 
 from app import app, db
 
 # Configurações do MongoDB e variáveis de ambiente
-MONGO_URI = os.getenv("MONGO_URI")
 FOGO_EMAIL = os.getenv("FOGO_EMAIL")
 FOGO_PASSWORD = os.getenv("FOGO_PASSWORD")
 FOGO_CRUZADO_API_URL = os.getenv("FOGO_CRUZADO_API_URL")
 
 index_app = Blueprint("index_app", __name__)
-CORS(app)
 
 events_collection = db["events"]
 
