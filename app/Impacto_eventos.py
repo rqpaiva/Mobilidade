@@ -54,7 +54,7 @@ ocorrencias_com_tipo = ocorrencias_data.merge(
 impacto_eventos_app = Flask(__name__)
 
 # Criação do blueprint
-impacto_eventos_app = Blueprint("impacto_eventos", __name__, url_prefix="/impacto_eventos")
+impacto_eventos_app = Blueprint("impacto_eventos_app", __name__, url_prefix="/impacto_eventos")
 
 
 @impacto_eventos_app.route('/dados', methods=['GET', 'POST'])
