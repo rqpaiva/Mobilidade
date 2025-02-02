@@ -5,6 +5,7 @@ from pymongo import MongoClient
 import os
 import secrets
 from app.Impacto_eventos import impacto_eventos_app
+from app.Mapa_ocorrencias import mapa_ocorrencias_app
 
 # Configurações gerais do Flask
 app = Flask(__name__)
