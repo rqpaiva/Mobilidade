@@ -4,7 +4,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 import os
 import secrets
-from app.Impacto_eventos import app as impacto_eventos_app
+from app.Impacto_eventos import impacto_eventos_app
 
 # Configurações gerais do Flask
 app = Flask(__name__)
