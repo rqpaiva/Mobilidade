@@ -24,6 +24,19 @@ logger.info("Conectando ao MongoDB...")
 client = MongoClient(MONGO_URI)
 db = client['mobility_data']
 
+# Função para calcular a distância entre duas coordenadas geográficas (em km)
+def calcular_distancia(coord1, coord2):
+    R = 6371.0  # Raio da Terra em km
+    lat1, lon1 = radians(coord1[0]), radians(coord1[1])
+    lat2, lon2 = radians(coord2[0]), radians(coord2[1])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
+
+
 # Carregar dados do MongoDB
 logger.info("Carregando dados do MongoDB...")
 rides_data = pd.DataFrame(list(db['rides_original'].find()))
@@ -43,7 +56,8 @@ app = Flask(__name__)
 # Criação do blueprint
 app = Blueprint("impacto_eventos", __name__)
 
-@app.route('/dados', methods=['GET'])
+
+@app.route('/dados', methods=['GET', 'POST'])
 def get_data():
     try:
         distancia_maxima_km = float(request.args.get('distancia', 5))
