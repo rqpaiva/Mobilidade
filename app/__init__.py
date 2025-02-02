@@ -12,6 +12,7 @@ CORS(app)
 
 # Registro do blueprint
 app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
+app.register_blueprint(mapa_ocorrencias_app, url_prefix="/mapa_ocorrencias")
 
 # Configurações de upload
 UPLOAD_FOLDER = 'upload_files/'
