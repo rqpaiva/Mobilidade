@@ -53,10 +53,13 @@ ocorrencias_com_tipo = ocorrencias_data.merge(
 )
 
 # Inicializar o app Flask
-app = Flask(__name__)
+mapa_ocorrencias_app = Flask(__name__)
+
+# Criação do blueprint
+mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__, url_prefix="/mapa_ocorrencias")
 
 # Rota principal para exibir o mapa e a tabela
-@app.route('/', methods=['GET', 'POST'])
+@mapa_ocorrencias_app.route('/', methods=['GET', 'POST'])
 def index():
     distancia_maxima_km = request.form.get('distancia', 5)
     janela_temporal_horas = request.form.get('tempo', 2)
@@ -130,7 +133,7 @@ def index():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Dashboard de Cancelamentos Relacionados</title>
+        <title>Impacto dos eventos da Cidade nas corridas</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -139,7 +142,7 @@ def index():
     </head>
     <body>
         <div class="container">
-            <h1 class="mt-4">Dashboard de Cancelamentos Relacionados</h1>
+            <h1 class="mt-4">Impacto dos eventos da Cidade nas corridas</h1>
             <form method="POST">
                 <div class="form-group">
                     <label for="distancia">Distância Máxima (km):</label>
@@ -164,4 +167,4 @@ def index():
 
 # Executar o app
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    mapa_ocorrencias_app.run(host='0.0.0.0', port=5000, debug=True)
