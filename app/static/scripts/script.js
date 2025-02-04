@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInput = document.getElementById('fileInput');
     const fileLabel = document.querySelector('.custom-file-label');
     const textUpload = document.querySelector('.text-upload');
-    const buttonSubimit = document.querySelector('.buttonSubimit');
+    const buttonSubimit = document.querySelector('.buttonSubmit');
 
     
     fileInput.addEventListener('change', function() {

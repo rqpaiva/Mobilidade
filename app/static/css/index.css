@@ -1,0 +1,116 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilização geral da página */
+body {
+    background-color: #1b1b1b;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column;
+}
+
+
+/* Container principal */
+.v1_17 {
+    background-color: #111;
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+}
+
+/* Título principal */
+.v5_3 {
+    font-size: 22px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 20px;
+}
+
+
+.container-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* Imagem central */
+.v15_30 {
+    flex: 1;
+}
+
+.v15_30 img {
+    width: 737px;
+    height: 335px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+
+
+/* Seção de upload */
+.v15_21 {
+    background-color: #222;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+/* Ícone de upload */
+.icon-upload {
+    font-size: 40px;
+    color: #00bfa6;
+    margin-bottom: 10px;
+}
+
+/* Botão de selecionar arquivo */
+.custom-file-label {
+    background-color: #008c7a;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.custom-file-label:hover {
+    background-color: #007366;
+}
+
+/* Escondendo input file padrão */
+input[type="file"] {
+    display: none;
+}
+
+.hiddenButton{
+    display: none;
+}
+
+.buttonSubmit{
+
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #00465D;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 30px;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    font-family: Inter, serif;
+    border: none;
+}

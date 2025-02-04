@@ -1,12 +1,13 @@
-from flask import Flask, Blueprint, jsonify, request
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
 import logging
-import pandas as pd
+import os
 from math import radians, cos, sin, sqrt, atan2
+
 import folium
 import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+from flask import Flask, Blueprint, jsonify, request
+from pymongo import MongoClient
 from sklearn.neighbors import KDTree
 
 # Carregar variáveis de ambiente
@@ -24,6 +25,9 @@ logger.info("Conectando ao MongoDB...")
 client = MongoClient(MONGO_URI)
 db = client['mobility_data']
 
+impacto_eventos_app = Blueprint("impacto_eventos_app", __name__)
+
+
 # Função para calcular a distância entre duas coordenadas geográficas (em km)
 def calcular_distancia(coord1, coord2):
     R = 6371.0  # Raio da Terra em km
@@ -37,25 +41,22 @@ def calcular_distancia(coord1, coord2):
     return R * c
 
 
-# Carregar dados do MongoDB
-logger.info("Carregando dados do MongoDB...")
-rides_data = pd.DataFrame(list(db['rides_original'].find()))
-ocorrencias_data = pd.DataFrame(list(db['ocorrencias'].find()))
-pop_data = pd.DataFrame(list(db['procedimento_operacional_padrao'].find()))
+def get_ocorrencias_data():
+    logger.info("Carregando ocorrencias_data do MongoDB...")
+    ocorrencias_data = pd.DataFrame(list(db['ocorrencias'].find()))
+    pop_data = pd.DataFrame(list(db['procedimento_operacional_padrao'].find()))
 
-# Unir ocorrências com tipos de eventos
-ocorrencias_com_tipo = ocorrencias_data.merge(
-    pop_data[['id_pop', 'pop_titulo']],
-    on='id_pop',
-    how='left'
-)
+    # Unir ocorrências com tipos de eventos
+    ocorrencias_data = ocorrencias_data.merge(
+        pop_data[['id_pop', 'pop_titulo']],
+        on='id_pop',
+        how='left'
+    )
 
-# Inicializar Flask
-impacto_eventos_app = Flask(__name__)
+    return ocorrencias_data
 
-# Criação do blueprint
-impacto_eventos_app = Blueprint("impacto_eventos_app", __name__, url_prefix="/impacto_eventos")
-
+def get_rides_data():
+    return pd.DataFrame(list(db['rides_original'].find()))
 
 @impacto_eventos_app.route('/dados', methods=['GET', 'POST'])
 def get_data():
@@ -66,8 +67,11 @@ def get_data():
         resultados = []
         mapa_cancelamentos = folium.Map(location=[-22.9068, -43.1729], zoom_start=12)
 
-        for bairro, total_cancelamentos in rides_data.groupby('suburb_client').size().items():
-            cancelamentos_bairro = rides_data[rides_data['suburb_client'] == bairro]
+        rides = get_rides_data()
+        ocorrencias_com_tipo = get_ocorrencias_data()
+
+        for bairro, total_cancelamentos in rides.groupby('suburb_client').size().items():
+            cancelamentos_bairro = rides[rides['suburb_client'] == bairro]
             ocorrencias_bairro = ocorrencias_com_tipo[ocorrencias_com_tipo['bairro'] == bairro]
 
             if not ocorrencias_bairro.empty:
@@ -130,6 +134,11 @@ def get_data():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    try:
+        port = int(os.environ.get('PORT', 5000))
+        app = Flask(__name__)
+        app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        logging.error("Erro subindo Impacto Eventos separadamente: ", e)
 

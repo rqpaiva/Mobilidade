@@ -1,14 +1,13 @@
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
 import logging
-import pandas as pd
+import os
 from math import radians, cos, sin, sqrt, atan2
-from datetime import timedelta
+
 import folium
-import branca.colormap as cm
-from flask import Flask, render_template_string, request
 import numpy as np
+import pandas as pd
+from dotenv import load_dotenv
+from flask import render_template_string, Blueprint, request
+from pymongo import MongoClient
 from sklearn.neighbors import KDTree
 
 # Carregar variáveis de ambiente
@@ -51,9 +50,6 @@ ocorrencias_com_tipo = ocorrencias_data.merge(
     on='id_pop',
     how='left'
 )
-
-# Inicializar o app Flask
-mapa_ocorrencias_app = Flask(__name__)
 
 # Criação do blueprint
 mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__, url_prefix="/mapa_ocorrencias")
