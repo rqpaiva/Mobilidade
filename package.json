@@ -1,5 +1,6 @@
 {
-  "name": "mobilet",
+  "homepage": "https://rqpaiva.github.io/Mobilidade/",
+  "name": "Mobilidade",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
