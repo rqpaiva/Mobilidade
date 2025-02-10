@@ -15,6 +15,3 @@ flask_session/
 
 # testing
 /coverage
-
-# production
-/build
