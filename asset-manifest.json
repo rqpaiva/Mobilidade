@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Mobilidade/static/css/main.c901865d.css",
+    "main.js": "/Mobilidade/static/js/main.2f7febbd.js",
+    "index.html": "/Mobilidade/index.html",
+    "main.c901865d.css.map": "/Mobilidade/static/css/main.c901865d.css.map",
+    "main.2f7febbd.js.map": "/Mobilidade/static/js/main.2f7febbd.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c901865d.css",
+    "static/js/main.2f7febbd.js"
+  ]
+}
