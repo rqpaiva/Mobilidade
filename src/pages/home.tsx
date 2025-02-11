@@ -12,7 +12,7 @@ const Home = () => {
       <div className="container-content">
         <Navbar />
         <div className="v15_30">
-          <img src="eccb17e445d1417595732e3a62df4f28.jpg" alt="" />
+          <img src="/Mobilidade/eccb17e445d1417595732e3a62df4f28.jpg" alt="" />
         </div>
       </div>
       <UploadSection />
