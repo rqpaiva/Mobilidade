@@ -18,7 +18,7 @@ interface AnaliseEspacialForm {
 }
 
 const AnaliseEspacialEmbed = () => {
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, any> | null>(null);
   const filterMethods = useForm<AnaliseEspacialForm>({
     defaultValues: {
       createdAt: null,
@@ -35,13 +35,17 @@ const AnaliseEspacialEmbed = () => {
     const driverDistance = filterMethods.watch('distanciaMotorista')
     const routeDistance = filterMethods.watch('distanciaRota')
     const suburbClient = filterMethods.watch('bairroCliente')
+    const newFilters: Record<string, any> = {};
 
-    if (createdAt) filters['created_at'] = {'$eq': createdAt};
-    if (status) filters['status'] = {'$eq': status};
-    if (driverDistance) filters['driver_distance'] = {'$gte': Number(driverDistance)};
-    if (routeDistance) { filters['route_distance'] = {'$gte': Number(routeDistance)}; filterMethods.unregister('distanciaRota') }
-    if (suburbClient) filters['suburb_client'] = {'$eq': suburbClient};
-    setFilters(filters);
+    if (createdAt) newFilters['created_at'] = {'$eq': createdAt};
+    if (status) newFilters['status'] = {'$eq': status};
+    if (driverDistance) newFilters['driver_distance'] = {'$gte': Number(driverDistance)};
+    if (routeDistance) { newFilters['route_distance'] = {'$gte': Number(routeDistance)}; filterMethods.unregister('distanciaRota') }
+    if (suburbClient) newFilters['suburb_client'] = {'$eq': suburbClient};
+
+    if (JSON.stringify(filters) !== JSON.stringify(newFilters)) {
+      setFilters(newFilters);
+    }
   };
 
   const mongoEmbed = useMemo(() => <MongoEmbed filters={filters} />, [filters]);
