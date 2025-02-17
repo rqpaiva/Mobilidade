@@ -4,7 +4,7 @@ import {FormProvider, useForm} from 'react-hook-form';
 
 import '../../styles/subpage.css'
 import MongoEmbed from '../../components/mongoEmbed';
-import {analiseEspacialFilters} from './filterUtil';
+import {analiseEspacialFilters, formatDateFilter} from './filterUtil';
 import FilterInput from '../../components/filter/FilterInput';
 import FilterSelect from '../../components/filter/FilterSelect';
 import FilterForm from '../../components/filter/FilterForm';
@@ -37,13 +37,14 @@ const AnaliseEspacialEmbed = () => {
     const suburbClient = filterMethods.watch('bairroCliente')
     const newFilters: Record<string, any> = {};
 
-    if (createdAt) newFilters['created_at'] = {'$eq': createdAt};
+    if (createdAt) newFilters['created_at'] = formatDateFilter(createdAt);
     if (status) newFilters['status'] = {'$eq': status};
     if (driverDistance) newFilters['driver_distance'] = {'$gte': Number(driverDistance)};
     if (routeDistance) { newFilters['route_distance'] = {'$gte': Number(routeDistance)}; filterMethods.unregister('distanciaRota') }
     if (suburbClient) newFilters['suburb_client'] = {'$eq': suburbClient};
 
     if (JSON.stringify(filters) !== JSON.stringify(newFilters)) {
+      console.log(newFilters)
       setFilters(newFilters);
     }
   };

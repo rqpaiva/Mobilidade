@@ -46,3 +46,17 @@ export const analiseEspacialFilters: IFilterFormField[] = [
     options: bairroOptions
   },
 ]
+
+export const formatDateFilter = (date: Date) => {
+  const startOfDay = new Date(date);
+  startOfDay.setUTCHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(date);
+  endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+  endOfDay.setUTCHours(0, 0, 0, 0);
+
+  return {
+    $gte: startOfDay,
+    $lt: endOfDay,
+  }
+}
