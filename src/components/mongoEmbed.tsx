@@ -1,16 +1,12 @@
-import {useEffect} from 'react';
 import Chart from './chart';
 
 import '../styles/dashboard.css'
 
 interface MongoEmbedProps {
-  filters?: Record<string, any> | undefined
+  filters?: Record<string, any> | null
 }
 
 const MongoEmbed = (props: MongoEmbedProps) => {
-  useEffect(() => {
-  }, [])
-
   return <div className='App'>
     <div className='charts'>
       <Chart height={'600px'} width={'800px'} filter={props.filters ?? {}} chartId={'d725cd12-caa3-44be-a974-824ea60c5ce7'}/>

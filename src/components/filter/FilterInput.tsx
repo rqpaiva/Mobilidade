@@ -11,7 +11,7 @@ interface FilterInputProps {
 }
 
 const FilterInput: React.FC<FilterInputProps> = ({ id, label, type, placeholder }) => {
-	const { register, setValue } = useFormContext();
+	const { register } = useFormContext();
 
 	return (
 		<div className='filter-container'>
@@ -20,7 +20,6 @@ const FilterInput: React.FC<FilterInputProps> = ({ id, label, type, placeholder 
 				{...register(id)}
 				type={type}
 				placeholder={placeholder}
-				onChange={(e) => setValue(id, e.target.value)}
 				className='filter-input'
 			/>
 		</div>

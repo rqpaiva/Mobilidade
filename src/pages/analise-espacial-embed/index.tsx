@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import Navbar from '../../components/navbar';
 import {FormProvider, useForm} from 'react-hook-form';
 
@@ -18,7 +18,7 @@ interface AnaliseEspacialForm {
 }
 
 const AnaliseEspacialEmbed = () => {
-  const [filters, setFilters] = useState<Record<string, any>>()
+  const [filters, setFilters] = useState<Record<string, any>>({});
   const filterMethods = useForm<AnaliseEspacialForm>({
     defaultValues: {
       createdAt: null,
@@ -35,16 +35,16 @@ const AnaliseEspacialEmbed = () => {
     const driverDistance = filterMethods.watch('distanciaMotorista')
     const routeDistance = filterMethods.watch('distanciaRota')
     const suburbClient = filterMethods.watch('bairroCliente')
-    const filters: Record<string, any> = {};
 
-
-    if (createdAt) filters['created_at'] = { '$eq': createdAt };
-    if (status) filters['status'] = { '$eq': status };
-    if (driverDistance) filters['driver_distance'] = { '$gte': driverDistance };
-    if (routeDistance) filters['route_distance'] = { '$gte': routeDistance };
-    if (suburbClient) filters['suburb_client'] = { '$eq': suburbClient };
-    setFilters(filters)
+    if (createdAt) filters['created_at'] = {'$eq': createdAt};
+    if (status) filters['status'] = {'$eq': status};
+    if (driverDistance) filters['driver_distance'] = {'$gte': Number(driverDistance)};
+    if (routeDistance) { filters['route_distance'] = {'$gte': Number(routeDistance)}; filterMethods.unregister('distanciaRota') }
+    if (suburbClient) filters['suburb_client'] = {'$eq': suburbClient};
+    setFilters(filters);
   };
+
+  const mongoEmbed = useMemo(() => <MongoEmbed filters={filters} />, [filters]);
 
   return (
     <div className='v1_17'>
@@ -59,31 +59,33 @@ const AnaliseEspacialEmbed = () => {
                 case 'text':
                   return (
                     <FilterInput
-                      id = { field.id }
-                      placeholder = {field.placeholder || ''}
-                      label = {field.label}
-                      type = {field.type}
-                      value={ String(field.state ?? '') }
+                      id={field.id}
+                      key={field.id}
+                      placeholder={field.placeholder || ''}
+                      label={field.label}
+                      type={field.type}
+                      value={String(field.state ?? '')}
                     />
                   );
                 case 'select':
                   return (
                     <FilterSelect
-                      id = { field.id }
+                      id={field.id}
+                      key={field.id}
                       label={field.label}
                       options={field.options}
                       value={field.selected}
-                      onChange={field.setState!}
+                      onChange={(value) => filterMethods.setValue(field.id as keyof AnaliseEspacialForm, value)}
                     />
                   );
                 default:
-                  return <div id={field.id} />;
+                  return <div key={field.id} id={field.id}/>;
               }
             })}
           </FilterForm>
         </FormProvider>
       </div>
-      <MongoEmbed filters={filters}/>
+      { mongoEmbed }
     </div>
   );
 };

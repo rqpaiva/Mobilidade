@@ -1,17 +1,17 @@
 import {IFilterFormField} from '../../components/filter/FilterField';
 
 const statusOptions = [
-  {name: 'Cancelada pelo Passageiro', value: 'CANCELADA_PELO_PASSAGEIRO'},
-  {name: 'Cancelada pelo Taxista', value: 'CANCELADA_PELO_TAXISTA'},
-  {name: 'Finalizada', value: 'FINALIZADA'},
+  {name: 'Cancelada pelo Passageiro', value: 'Cancelada pelo Passageiro'},
+  {name: 'Cancelada pelo Taxista', value: 'Cancelada pelo Taxista'},
+  {name: 'Finalizada', value: 'Finalizada'},
 ]
 
 const bairroOptions = [
   {name: 'Todos', value: ''},
-  {name: 'Copacabana', value: 'COPACABANA'},
-  {name: 'Tijuca', value: 'TIJUCA'},
-  {name: 'Centro', value: 'CENTRO'},
-  {name: 'Botafogo', value: 'BOTAFOGO'},
+  {name: 'Copacabana', value: 'Copacabana'},
+  {name: 'Tijuca', value: 'Tijuca'},
+  {name: 'Centro', value: 'Centro'},
+  {name: 'Botafogo', value: 'Botafogo'},
 ]
 
 export const analiseEspacialFilters: IFilterFormField[] = [
