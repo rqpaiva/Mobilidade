@@ -76,7 +76,6 @@ img{
 }
 
 .buttonSubmit{
-
     display: inline-block;
     padding: 10px 20px;
     background-color: #00465D; 
@@ -89,9 +88,6 @@ img{
     font-family: Inter, serif;
     border: none;
 }
-
-
-
 
 .custom-file-label:hover {
     background-color: #383b53;

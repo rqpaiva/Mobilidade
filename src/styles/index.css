@@ -43,6 +43,7 @@ body {
 .container-content {
     display: flex;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 20px;
 }
 
@@ -92,7 +93,7 @@ body {
 }
 
 /* Escondendo input file padrão */
-input[type="file"] {
+input[type='file'] {
     display: none;
 }
 
