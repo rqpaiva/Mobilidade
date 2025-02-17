@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/Mobilidade/static/css/main.7d065dd3.css",
-    "main.js": "/Mobilidade/static/js/main.35e1156f.js",
+    "main.js": "/Mobilidade/static/js/main.c9a0f122.js",
     "static/js/212.283de8df.chunk.js": "/Mobilidade/static/js/212.283de8df.chunk.js",
     "static/js/985.8fb40952.chunk.js": "/Mobilidade/static/js/985.8fb40952.chunk.js",
     "index.html": "/Mobilidade/index.html",
     "main.7d065dd3.css.map": "/Mobilidade/static/css/main.7d065dd3.css.map",
-    "main.35e1156f.js.map": "/Mobilidade/static/js/main.35e1156f.js.map",
+    "main.c9a0f122.js.map": "/Mobilidade/static/js/main.c9a0f122.js.map",
     "985.8fb40952.chunk.js.map": "/Mobilidade/static/js/985.8fb40952.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.7d065dd3.css",
-    "static/js/main.35e1156f.js"
+    "static/js/main.c9a0f122.js"
   ]
 }
