@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/Mobilidade/static/css/main.c901865d.css",
-    "main.js": "/Mobilidade/static/js/main.383c8397.js",
+    "main.css": "/Mobilidade/static/css/main.fcf8ebde.css",
+    "main.js": "/Mobilidade/static/js/main.7929a354.js",
     "index.html": "/Mobilidade/index.html",
-    "main.c901865d.css.map": "/Mobilidade/static/css/main.c901865d.css.map",
-    "main.383c8397.js.map": "/Mobilidade/static/js/main.383c8397.js.map"
+    "main.fcf8ebde.css.map": "/Mobilidade/static/css/main.fcf8ebde.css.map",
+    "main.7929a354.js.map": "/Mobilidade/static/js/main.7929a354.js.map"
   },
   "entrypoints": [
-    "static/css/main.c901865d.css",
-    "static/js/main.383c8397.js"
+    "static/css/main.fcf8ebde.css",
+    "static/js/main.7929a354.js"
   ]
 }
