@@ -8,9 +8,10 @@ interface FilterInputProps {
 	type: 'text' | 'number';
 	value: string | number;
 	placeholder: string;
+	regex: RegExp | undefined
 }
 
-const FilterInput: React.FC<FilterInputProps> = ({ id, label, type, placeholder }) => {
+const FilterInput: React.FC<FilterInputProps> = ({ id, label, type, placeholder, regex }) => {
 	const { register } = useFormContext();
 
 	return (
@@ -18,6 +19,7 @@ const FilterInput: React.FC<FilterInputProps> = ({ id, label, type, placeholder 
 			<label className='filter-label'>{label}</label>
 			<input
 				{...register(id)}
+				pattern={regex?.source}
 				type={type}
 				placeholder={placeholder}
 				className='filter-input'

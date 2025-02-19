@@ -70,6 +70,7 @@ const AnaliseEspacialEmbed = () => {
                       label={field.label}
                       type={field.type}
                       value={String(field.state ?? '')}
+                      regex={field.regex}
                     />
                   );
                 case 'select':

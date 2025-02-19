@@ -16,8 +16,7 @@ export interface IFilterFormField {
   minDate?: Date;
   maxDate?: Date;
   options?: any;
-  mask?: string;
-  optionsMask?: string;
+  regex?: RegExp;
   selected?: undefined | ISelected;
   state?: Date | string | number | boolean | null;
   amountState?: Date | string | number | boolean | null;
