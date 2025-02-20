@@ -2,19 +2,22 @@ import os
 import pandas as pd
 import numpy as np
 import pymongo
-import folium
 import dash
-from dash import dcc, html
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objects as go
+import plotly.express as px
+import tempfile
 from dash.dependencies import Input, Output
 from dotenv import load_dotenv
+from flask import Flask
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score
 from sklearn.ensemble import IsolationForest
 from folium.plugins import MarkerCluster
-import plotly.graph_objects as go
-import tempfile
-import plotly.express as px
+import folium
+
 
 # 🔹 Carregar variáveis de ambiente
 load_dotenv()
@@ -160,70 +163,69 @@ def generate_circle_packing():
     return px.treemap(pd.DataFrame(data), path=["parent", "id"], values="value",
                       title="Perfil dos Clusters com Status das Corridas")
 
-# 🔹 Criar a aplicação Dash
-app = dash.Dash(__name__)
 
-app.layout = html.Div([
-    html.H1("Análise do comportamento das corridas em relação a distância do motorista até passageiro"),
-
-    # 🔸 Boxplot das corridas por distância do motorista
-    dcc.Graph(id="boxplot-distancia"),
-
-    # 🔸 Gráfico combinado de WCSS e Silhouette Score com dois eixos Y
-    dcc.Graph(id="combined-clustering-chart"),
-
-    # 🔸 Perfil dos Clusters
-    dcc.Graph(id="circle-packing-clusters"),
-
-    # 🔸 Mapa com Marker Clustering por Cluster
-    html.Iframe(id="mapa-clusters", width="100%", height="600")
-])
-
-
-# 🔹 Callback para atualizar os gráficos e o mapa
-@app.callback(
-    [Output("boxplot-distancia", "figure"),
-     Output("combined-clustering-chart", "figure"),
-     Output("circle-packing-clusters", "figure"),
-     Output("mapa-clusters", "srcDoc")],
-    Input("mapa-clusters", "id")
-)
-def update_visuals(_):
-    mapa_html = generate_folium_map(df)
-
-    # 🔸 Gráfico combinado de WCSS e Silhouette Score com eixos Y separados
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(x=list(k_values), y=wcss, mode="lines+markers",
-                             name="WCSS", yaxis="y1"))
-
-    fig.add_trace(go.Scatter(x=list(k_values), y=silhouette_scores, mode="lines+markers",
-                             name="Silhouette Score", yaxis="y2"))
-
-    fig.add_vline(x=optimal_k, line_dash="dash", line_color="red",
-                  annotation_text=f"Melhor K = {optimal_k}")
-
-    fig.update_layout(
-        title="WCSS e Silhouette Score para Diferentes Números de Clusters",
-        xaxis_title="Número de Clusters",
-        yaxis=dict(title="WCSS", side="left"),
-        yaxis2=dict(title="Silhouette Score", overlaying="y", side="right"),
-        legend_title="Métrica"
+# 🔹 Criar a aplicação Dash dentro do Flask como um Blueprint
+def create_analise_espacial_cluster_app(flask_app):
+    dash_app = dash.Dash(
+        server=flask_app,
+        name="AnaliseEspacialCluster",
+        url_base_pathname="/analise-espacial-cluster/",
+        suppress_callback_exceptions=True
     )
 
-    # 🔸 Boxplot da distância do motorista
-    boxplot_fig = go.Figure()
-    for status in df["status"].unique():
-        subset = df[df["status"] == status]
-        boxplot_fig.add_trace(go.Box(y=subset["driver_distance"], name=status))
+    # 🔸 Layout do Dash
+    dash_app.layout = html.Div([
+        html.H1("Análise do comportamento das corridas em relação à distância do motorista até passageiro"),
 
-    boxplot_fig.update_layout(title="Distribuição da Distância do Motorista até o Passageiro por Status da Corrida",
-                              yaxis_title="Distância (metros)")
+        # 🔸 Boxplot das corridas por distância do motorista
+        dcc.Graph(id="boxplot-distancia"),
 
-    return boxplot_fig, fig, generate_circle_packing(), mapa_html
+        # 🔸 Gráfico combinado de WCSS e Silhouette Score com dois eixos Y
+        dcc.Graph(id="combined-clustering-chart"),
 
+        # 🔸 Perfil dos Clusters
+        dcc.Graph(id="circle-packing-clusters"),
 
-# 🔹 Rodar a aplicação
-if __name__ == "__main__":
-    app.run_server(debug=True)
+        # 🔸 Mapa com Marker Clustering por Cluster
+        html.Iframe(id="mapa-clusters", width="100%", height="600")
+    ])
 
+    # 🔹 Callback para atualizar os gráficos e o mapa
+    @dash_app.callback(
+        [Output("boxplot-distancia", "figure"),
+         Output("combined-clustering-chart", "figure"),
+         Output("circle-packing-clusters", "figure"),
+         Output("mapa-clusters", "srcDoc")],
+        Input("mapa-clusters", "id")
+    )
+    def update_visuals(_):
+        mapa_html = generate_folium_map(df)
+
+        # 🔸 Gráfico combinado de WCSS e Silhouette Score
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=list(k_values), y=wcss, mode="lines+markers",
+                                 name="WCSS", yaxis="y1"))
+        fig.add_trace(go.Scatter(x=list(k_values), y=silhouette_scores, mode="lines+markers",
+                                 name="Silhouette Score", yaxis="y2"))
+        fig.add_vline(x=optimal_k, line_dash="dash", line_color="red",
+                      annotation_text=f"Melhor K = {optimal_k}")
+
+        fig.update_layout(
+            title="WCSS e Silhouette Score para Diferentes Números de Clusters",
+            xaxis_title="Número de Clusters",
+            yaxis=dict(title="WCSS", side="left"),
+            yaxis2=dict(title="Silhouette Score", overlaying="y", side="right"),
+            legend_title="Métrica"
+        )
+
+        # 🔸 Boxplot da distância do motorista
+        boxplot_fig = go.Figure()
+        for status in df["status"].unique():
+            subset = df[df["status"] == status]
+            boxplot_fig.add_trace(go.Box(y=subset["driver_distance"], name=status))
+
+        boxplot_fig.update_layout(title="Distância do Motorista por Status da Corrida")
+
+        return boxplot_fig, fig, generate_circle_packing(), mapa_html
+
+    return dash_app
