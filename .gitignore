@@ -6,3 +6,15 @@ uploads
 .env
 .vscode/
 flask_session/
+
+# REACT
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
