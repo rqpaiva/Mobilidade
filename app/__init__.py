@@ -4,7 +4,7 @@ from flask_cors import CORS
 from pymongo import MongoClient
 import os
 import secrets
-from .analise_espacial_cluster import create_analise_espacial_cluster_app
+from Analise_espacial_cluster_v1 import create_analise_espacial_cluster_app
 
 # Configurações gerais do Flask
 app = Flask(__name__)
