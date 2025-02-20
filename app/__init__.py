@@ -4,14 +4,13 @@ from flask_cors import CORS
 from pymongo import MongoClient
 import os
 import secrets
-from app.Impacto_eventos import impacto_eventos_app
 
 # Configurações gerais do Flask
 app = Flask(__name__)
 CORS(app)
 
 # Registro do blueprint
-app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
+# app.register_blueprint(impacto_eventos_app, url_prefix="/impacto_eventos")
 
 # Configurações de upload
 UPLOAD_FOLDER = 'upload_files/'
