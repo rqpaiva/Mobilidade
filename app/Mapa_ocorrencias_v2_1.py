@@ -6,7 +6,7 @@ import pandas as pd
 from math import radians, cos, sin, sqrt, atan2
 import folium
 from folium.plugins import MarkerCluster
-from flask import Flask, render_template_string, request
+from flask import Flask, Blueprint, render_template_string, request
 import json
 import plotly.graph_objects as go
 
@@ -49,10 +49,10 @@ ocorrencias_data['data_fim'] = pd.to_datetime(ocorrencias_data['data_fim'])
 ocorrencias_data = ocorrencias_data.merge(procedimentos_data, on='id_pop', how='left')
 
 # Inicializar Flask
-app = Flask(__name__)
+mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__)
 
 
-@app.route('/', methods=['GET', 'POST'])
+@mapa_ocorrencias_app.route('/', methods=['GET', 'POST'])
 def index():
     # Parâmetros do formulário
     min_date = rides_data['created_at'].min().strftime('%Y-%m-%d')
@@ -202,4 +202,10 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    try:
+        port = int(os.environ.get('PORT', 5000))
+        app = Flask(__name__)
+        app.register_blueprint(mapa_ocorrencias_app, url_prefix="/mapa-ocorrencias")
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        logging.error("Erro subindo Mapa Ocorrencias separadamente: ", e)
