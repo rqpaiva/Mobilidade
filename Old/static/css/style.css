@@ -1,0 +1,134 @@
+body{
+    padding: 0;
+    margin: 0;
+}
+
+.container{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: end;
+    padding: 0;
+    gap: 8px;
+}
+
+img{
+    width: 737px;
+    height: 335px;
+    border-radius: 6px;
+}
+
+.container-upload{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #F5F5F5;
+    width: 519px;
+    height: 335px;
+    border: dashed 2px  #A7A7A7 ;
+    border-radius: 6px;
+    gap: 24px;
+}
+
+.icon-upload{
+    text-align: center;
+    width: 100%;
+    color: #393939;
+    font-size: 100px!important;
+}
+
+.button-upload input{
+    background-color: #00465D;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 30px;
+    width: 259px;
+    cursor: pointer;
+    font-size: 16px; font-family: Inter, serif;
+
+}
+
+#fileInput{
+
+    display: none;
+}
+
+
+#fileInput {
+    display: none;
+}
+
+
+.custom-file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #00465D; 
+    color: #fff;
+    cursor: pointer;
+    border-radius: 30px;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    font-family: Inter, serif;
+}
+
+.buttonSubimit{
+
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #00465D; 
+    color: #fff;
+    cursor: pointer;
+    border-radius: 30px;
+    font-size: 16px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+    font-family: Inter, serif;
+    border: none;
+}
+
+
+
+
+.custom-file-label:hover {
+    background-color: #383b53;
+}
+
+button:hover {
+    background-color: #383b53;
+}
+
+
+#fileName {
+    font-size: 14px;
+    color: #32213a; 
+}
+
+#uploadForm{
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.hidenButton{
+    display: none;
+}
+
+
+
+
+.containerTable{
+    width: 100%!important;
+    
+    padding-left: 100px;
+    padding-right: 100px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
