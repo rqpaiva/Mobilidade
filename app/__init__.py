@@ -5,6 +5,7 @@ from pymongo import MongoClient
 import os
 import secrets
 from app.Analise_espacial_cluster_v1 import create_analise_espacial_cluster_app
+from app.Mapa_ocorrencias_v2_1 import mapa_ocorrencias_app
 
 # Configurações gerais do Flask
 app = Flask(__name__)
