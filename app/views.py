@@ -79,6 +79,6 @@ def dados_correlacionados():
 
 @index_app.route('/mapa_ocorrencias')
 def mapa_ocorrencias():
-    return render_template('impacto_eventos.html')
+    return render_template('mapa_ocorrencias.html')
 
 app.register_blueprint(index_app, url_prefix="/")
