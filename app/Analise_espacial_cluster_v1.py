@@ -3,12 +3,11 @@ import pandas as pd
 import numpy as np
 import pymongo
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
 import plotly.graph_objects as go
 import plotly.express as px
 import tempfile
 from dash.dependencies import Input, Output
+from dash import dcc, html
 from dotenv import load_dotenv
 from flask import Flask
 from sklearn.cluster import KMeans
