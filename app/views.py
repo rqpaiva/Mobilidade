@@ -77,8 +77,8 @@ def analise_pessoal():
 def dados_correlacionados():
     return render_template('dados_correlacionados.html')
 
-# @index_app.route('/mapa_ocorrencias')
-# def mapa_ocorrencias():
-#    return render_template('mapa_ocorrencias.html')
+@index_app.route('/mapa_ocorrencias')
+ def mapa_ocorrencias():
+    return render_template('impacto_eventos.html')
 
 app.register_blueprint(index_app, url_prefix="/")
