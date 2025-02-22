@@ -11,47 +11,35 @@
 <body>
     <div class="container">
         <h1 class="mt-4">Impacto dos Eventos na Cidade nos Cancelamentos</h1>
-        <form id="filterForm">
-            <div class="form-group">
-                <label for="distancia">Distância Máxima (km):</label>
-                <input type="number" id="distancia" name="distancia" value="5" step="0.1" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="tempo">Janela Temporal (horas):</label>
-                <input type="number" id="tempo" name="tempo" value="2" step="0.1" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-primary">Atualizar</button>
-        </form>
-        <h2 class="mt-4">Estatísticas por Bairro</h2>
-        <div id="tabela-container"></div>
-        <h2 class="mt-4">Mapa de Cancelamentos</h2>
-        <div id="mapa-container"></div>
-    </div>
+        <form id="filter-form">
+        <input type="date" id="data_inicio">
+        <input type="date" id="data_fim">
+        <input type="number" id="distancia" value="5" step="0.1">
+        <input type="number" id="tempo" value="2" step="0.1">
+        <button type="submit">Aplicar</button>
+    </form>
+
+    <h2>Mapa</h2>
+    <div id="mapa"></div>
+
+    <h2>Gráfico Sankey</h2>
+    <div id="sankey"></div>
+
+    <h2>Detalhes</h2>
+    <div id="tabela"></div>
 
     <script>
-        function atualizarDados() {
-            const distancia = document.getElementById("distancia").value;
-            const tempo = document.getElementById("tempo").value;
+        document.getElementById("filter-form").addEventListener("submit", function(event) {
+    event.preventDefault();
 
-            fetch(`https://mobilidade.onrender.com/impacto_eventos/dados?distancia=${distancia}&tempo=${tempo}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("tabela-container").innerHTML = data.tabela_html;
-                document.getElementById("mapa-container").innerHTML = data.mapa_html;
-            })
-            .catch(error => {
-                console.error('Erro ao carregar os dados:', error);
-                document.getElementById("tabela-container").innerHTML = "<p class='alert alert-danger'>Erro ao carregar os dados.</p>";
-                document.getElementById("mapa-container").innerHTML = "<p class='alert alert-danger'>Erro ao carregar o mapa.</p>";
-            });
-        }
-
-        document.getElementById("filterForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            atualizarDados();
+    fetch(`/dados?distancia=${document.getElementById("distancia").value}&tempo=${document.getElementById("tempo").value}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("mapa").innerHTML = data.mapa;
+            document.getElementById("sankey").innerHTML = data.sankey;
+            document.getElementById("tabela").innerHTML = data.tabela;
         });
-
-        window.onload = atualizarDados;
+     });
     </script>
 </body>
 </html>
