@@ -6,7 +6,7 @@ import pandas as pd
 from math import radians, cos, sin, sqrt, atan2
 import folium
 from folium.plugins import MarkerCluster
-from flask import Flask, Blueprint, render_template_string, request
+from flask import Flask, Blueprint, jsonify, render_template_string, request
 import json
 import plotly.graph_objects as go
 
@@ -165,41 +165,7 @@ def index():
 
     mapa_html = mapa_cancelamentos._repr_html_()
 
-    form_html = f"""
-    <form method="POST">
-        <label>Período de Análise:</label>
-        <input type="date" name="data_inicio" value="{data_inicio}">
-        <input type="date" name="data_fim" value="{data_fim}">
-
-        <label>Raio da Distância (km):</label>
-        <input type="number" name="distancia" value="{distancia_maxima_km}" step="0.1">
-
-        <label>Janela Temporal (horas):</label>
-        <input type="number" name="tempo" value="{janela_temporal_horas}" step="0.1">
-
-        <label>Tipo de Evento:</label>
-        <select name="tipo_evento" multiple>
-            {''.join(f'<option value="{evento}" {"selected" if evento in tipo_evento else ""}>{evento}</option>' for evento in ocorrencias_data['pop_titulo'].unique())}
-        </select>
-
-        <button type="submit">Aplicar Filtros</button>
-    </form>
-    """
-
-    return render_template_string(f"""
-    <html><head><title>Impacto dos eventos</title></head>
-    <body>
-        <h1>Impacto dos eventos na cidade</h1>
-        {form_html}
-        <h2>Visualização Sankey</h2>
-        {sankey_html}
-        <h2>Mapa dos eventos e seus impactos</h2>
-        {mapa_html}
-        <h2>Detalhe dos eventos</h2>
-        {tabela_html}
-    </body></html>
-    """)
-
+    return jsonify({"mapa": mapa_html, "sankey": sankey_html, "tabela": tabela_html})
 
 if __name__ == '__main__':
     try:
