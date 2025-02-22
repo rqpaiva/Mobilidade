@@ -169,7 +169,7 @@ def index():
 
 if __name__ == '__main__':
     try:
-        port = int(os.environ.get('PORT', 5000))
+        port = int(os.environ.get('PORT', 10000))
         app = Flask(__name__)
         app.register_blueprint(mapa_ocorrencias_app, url_prefix="/mapa_ocorrencias")
         app.run(host='0.0.0.0', port=port)
