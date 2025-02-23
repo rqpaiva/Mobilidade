@@ -32,7 +32,7 @@
         document.getElementById("filter-form").addEventListener("submit", function(event) {
     event.preventDefault();
 
-    fetch(`/dados?distancia=${document.getElementById("distancia").value}&tempo=${document.getElementById("tempo").value}`)
+    fetch(`/mapa_cancelamentos?distancia=${document.getElementById("distancia").value}&tempo=${document.getElementById("tempo").value}`)
         .then(response => response.json())
         .then(data => {
             document.getElementById("mapa").innerHTML = data.mapa;
