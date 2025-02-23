@@ -7,7 +7,6 @@ from math import radians, cos, sin, sqrt, atan2
 import folium
 from folium.plugins import MarkerCluster
 from flask import Flask, Blueprint, jsonify, render_template_string, request
-import json
 import plotly.graph_objects as go
 
 # Carregar variáveis de ambiente
@@ -22,31 +21,54 @@ MONGO_URI = os.getenv("MONGO_URI")
 logger.info("Conectando ao MongoDB...")
 client = MongoClient(MONGO_URI)
 db = client['mobility_data']
-rides_data = pd.DataFrame(list(db['rides_original'].find()))
-ocorrencias_data = pd.DataFrame(list(db['ocorrencias'].find()))
-procedimentos_data = pd.DataFrame(list(db['procedimento_operacional_padrao'].find()))
 
 
-# Função para calcular a distância entre duas coordenadas geográficas (em km)
+# Função para carregar os DataFrames sob demanda
+def carregar_dados():
+    rides_data = pd.DataFrame(
+        list(db['rides_original'].find({}, {"created_at": 1, "origin_lat": 1, "origin_lng": 1, "status": 1, "suburb_client": 1})))  # Adicionando suburb_client
+
+    ocorrencias_data = pd.DataFrame(list(db['ocorrencias'].find({}, {
+        "data_inicio": 1, "data_fim": 1, "latitude": 1, "longitude": 1, "id_pop": 1, "descricao": 1  # Incluindo descricao
+    })))
+
+    procedimentos_data = pd.DataFrame(
+        list(db['procedimento_operacional_padrao'].find({}, {"id_pop": 1, "pop_titulo": 1})))  # Incluindo pop_titulo
+
+    if rides_data.empty or ocorrencias_data.empty:
+        logger.warning("Um dos datasets está vazio! Verifique a conexão com o MongoDB.")
+
+    # Converter datas para datetime
+    rides_data['created_at'] = pd.to_datetime(rides_data['created_at'])
+    ocorrencias_data['data_inicio'] = pd.to_datetime(ocorrencias_data['data_inicio'])
+    ocorrencias_data['data_fim'] = pd.to_datetime(ocorrencias_data['data_fim'])
+
+    # Mesclar ocorrências com procedimentos operacionais para trazer 'pop_titulo'
+    ocorrencias_data = ocorrencias_data.merge(procedimentos_data, on='id_pop', how='left')
+
+    # Garantir que 'pop_titulo' existe
+    if 'pop_titulo' not in ocorrencias_data.columns:
+        logger.error("A coluna 'pop_titulo' não está presente após a mesclagem.")
+        ocorrencias_data['pop_titulo'] = 'Desconhecido'  # Adicionar valor padrão
+
+    # Adicionar a coluna 'bairro' a partir do campo suburb_client nas corridas
+    rides_data.rename(columns={'suburb_client': 'bairro'}, inplace=True)
+
+    return rides_data, ocorrencias_data
+
+
+
+# Função para calcular distância entre coordenadas geográficas (em km)
 def calcular_distancia(coord1, coord2):
     R = 6371.0  # Raio da Terra em km
     lat1, lon1 = radians(coord1[0]), radians(coord1[1])
     lat2, lon2 = radians(coord2[0]), radians(coord2[1])
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-
     a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return R * c
 
-
-# Converter datas para datetime
-rides_data['created_at'] = pd.to_datetime(rides_data['created_at'])
-ocorrencias_data['data_inicio'] = pd.to_datetime(ocorrencias_data['data_inicio'])
-ocorrencias_data['data_fim'] = pd.to_datetime(ocorrencias_data['data_fim'])
-
-# Mesclar ocorrências com procedimentos operacionais
-ocorrencias_data = ocorrencias_data.merge(procedimentos_data, on='id_pop', how='left')
 
 # Inicializar Flask
 mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__)
@@ -54,7 +76,9 @@ mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__)
 
 @mapa_ocorrencias_app.route('/', methods=['GET', 'POST'])
 def index():
-    # Parâmetros do formulário
+    rides_data, ocorrencias_data = carregar_dados()
+
+    # Definir intervalo padrão para filtros
     min_date = rides_data['created_at'].min().strftime('%Y-%m-%d')
     max_date = rides_data['created_at'].max().strftime('%Y-%m-%d')
 
@@ -62,16 +86,17 @@ def index():
     janela_temporal_horas = float(request.form.get('tempo', 2))
     data_inicio = request.form.get('data_inicio', min_date)
     data_fim = request.form.get('data_fim', max_date)
-    tipo_evento = request.form.getlist('tipo_evento')  # Seleção múltipla de eventos
+    tipo_evento = request.form.getlist('tipo_evento')
 
-    # Filtrar os dados pelo período de análise
+    # Converter filtros para datetime
+    data_inicio_dt = pd.to_datetime(data_inicio)
+    data_fim_dt = pd.to_datetime(data_fim)
+
+    # Filtragem antes do processamento
     rides_filtradas = rides_data[
-        (rides_data['created_at'] >= data_inicio) & (rides_data['created_at'] <= data_fim)
-        ]
-
+        (rides_data['created_at'] >= data_inicio_dt) & (rides_data['created_at'] <= data_fim_dt)]
     ocorrencias_filtradas = ocorrencias_data[
-        (ocorrencias_data['data_inicio'] >= data_inicio) & (ocorrencias_data['data_fim'] <= data_fim)
-        ]
+        (ocorrencias_data['data_inicio'] >= data_inicio_dt) & (ocorrencias_data['data_fim'] <= data_fim_dt)]
 
     if tipo_evento:
         ocorrencias_filtradas = ocorrencias_filtradas[ocorrencias_filtradas['pop_titulo'].isin(tipo_evento)]
@@ -94,6 +119,12 @@ def index():
             (rides_proximas['created_at'] - evento['data_inicio']).dt.total_seconds() / 3600)
         rides_proximas = rides_proximas[rides_proximas['tempo_diferenca'] <= janela_temporal_horas]
 
+        # Se houver corridas próximas, pegar o primeiro bairro encontrado
+        if not rides_proximas.empty:
+            bairro_evento = rides_proximas.iloc[0]['bairro']
+        else:
+            bairro_evento = "Desconhecido"  # Se não houver corridas próximas, manter "Desconhecido"
+
         cancelamentos_taxista = rides_proximas[rides_proximas['status'] == 'Cancelada pelo Taxista']
         cancelamentos_passageiro = rides_proximas[rides_proximas['status'] == 'Cancelada pelo Passageiro']
         total_cancelamentos = cancelamentos_taxista.shape[0] + cancelamentos_passageiro.shape[0]
@@ -102,11 +133,12 @@ def index():
             percentual_cancelamento_bairro = (total_cancelamentos / rides_proximas.shape[0]) * 100 if \
                 rides_proximas.shape[0] > 0 else 0
 
+            # Criar visualização Mapa usando Marker Cluster
             folium.Marker(
                 location=event_location,
                 popup=f"""
                                             <b>Evento:</b> {evento['pop_titulo']}<br>
-                                            <b>Bairro:</b> {evento.get('bairro', 'Desconhecido')}<br>
+                                            <b>Bairro:</b> {bairro_evento}<br>
                                             <b>Data:</b> {evento['data_inicio'].strftime('%Y-%m-%d %H:%M:%S')}<br>
                                             <b>Raio de influência:</b> {distancia_maxima_km} km<br>
                                             <b>Cancelamentos pelo Taxista:</b> {cancelamentos_taxista.shape[0]}<br>
@@ -116,7 +148,7 @@ def index():
             ).add_to(marker_cluster)
 
             resultados.append({
-                'Bairro': evento.get('bairro', 'Desconhecido'),
+                'Bairro': bairro_evento,
                 'Data': evento['data_inicio'].strftime('%Y-%m-%d'),
                 'Horário Ocorrência': evento['data_inicio'].strftime('%H:%M:%S'),
                 'Duração Ocorrência (h)': round(event_duration, 2),
@@ -128,7 +160,7 @@ def index():
             })
 
             resultados_sankey.append({
-                'Bairro': evento.get('bairro', 'Desconhecido'),
+                'Bairro': bairro_evento,
                 'Data': evento['data_inicio'].strftime('%Y-%m-%d'),
                 'Evento': evento['pop_titulo'],
                 'Total Cancelamentos': total_cancelamentos,
@@ -166,6 +198,7 @@ def index():
     mapa_html = mapa_cancelamentos._repr_html_()
 
     return jsonify({"mapa": mapa_html, "sankey": sankey_html, "tabela": tabela_html})
+    
 
 if __name__ == '__main__':
     try:
