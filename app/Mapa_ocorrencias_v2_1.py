@@ -3,6 +3,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import logging
 import pandas as pd
+import numpy as np
 from math import radians, cos, sin, sqrt, atan2
 import folium
 from folium.plugins import MarkerCluster
@@ -58,17 +59,14 @@ def carregar_dados():
 
 
 
-# Função para calcular distância entre coordenadas geográficas (em km)
+# Função para calcular distância entre coordenadas geográficas (em km) de forma vetorizada
 def calcular_distancia(coord1, coord2):
-    R = 6371.0  # Raio da Terra em km
-    lat1, lon1 = radians(coord1[0]), radians(coord1[1])
-    lat2, lon2 = radians(coord2[0]), radians(coord2[1])
+    lat1, lon1 = np.radians(coord1)
+    lat2, lon2 = np.radians(coord2)
     dlat = lat2 - lat1
     dlon = lon2 - lon1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c
-
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    return 6371.0 * (2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a)))
 
 # Inicializar Flask
 mapa_ocorrencias_app = Blueprint("mapa_ocorrencias_app", __name__)
