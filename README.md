@@ -1,0 +1,1 @@
+Projeto de dashboard para análise de cancelamentos de aplicativos de mobilidade na cidade do Rio de Janeiro correlacionando dados geoespaciais para a geração de insights. Artefato concebido através de metodologia DSR para dissertação de mestrado em Sistema de Informação. O dashboard se encontra publicado em ambiente da UNIRIO.
