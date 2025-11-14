@@ -1,0 +1,167 @@
+/* dashboard.css */
+
+/* 1. Grid principal */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows:
+    auto
+    auto
+    auto
+    auto;
+  grid-template-areas:
+    "filters    filters"
+    "map        passengers"
+    "stats      stats"
+    "drivers    drivers";
+  gap: 1rem;
+  padding: 1rem;
+
+  /* Garante altura igual dos itens na mesma linha (map e passengers) */
+  align-items: stretch;
+}
+
+/* 2. Áreas nomeadas */
+.container-filters    { grid-area: filters; }
+.container-map        { grid-area: map; }
+.container-passengers { grid-area: passengers; }
+.container-stats      { grid-area: stats; }
+.container-drivers    { grid-area: drivers; }
+
+/* 3. Filtros */
+.container-filters {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.container-filters h3 { margin-top: 0; }
+.container-filters form {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  align-items: end;
+}
+@media (max-width:1200px) {
+  .container-filters form { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width:900px) {
+  .container-filters form { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width:600px) {
+  .container-filters form { grid-template-columns: 1fr; }
+}
+.container-filters form label { font-size: 0.9rem; }
+.container-filters form select,
+.container-filters form input {
+  width: 100%; padding: 0.5rem; margin-top: 0.25rem;
+  border: 1px solid #ccc; border-radius: 4px;
+}
+.container-filters form button {
+  grid-column: 1 / -1;
+  padding: 0.75rem; background: #003f7d;
+  color: #fff; border: none; border-radius: 4px;
+  cursor: pointer;
+}
+
+/* 4. Mapa */
+.container-map {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  /* Faz o #map ocupar toda a altura da linha (mesma do card à direita) */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* impede “vazar” para fora do container */
+}
+#map {
+  width: 100%;
+  height: 100%;       /* ocupa 100% da altura do container */
+  min-height: 360px;  /* altura mínima confortável */
+}
+.map-instructions { text-align: center; font-size: 0.85rem; color: #666; margin-top: 0.5rem; }
+
+/* 5. Perfil Socioeconômico dos Passageiros */
+.container-passengers {
+  background: #fff; padding: 1rem; border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  height: 100%;
+}
+.container-passengers h3 { margin-top: 0; }
+.container-passengers .stat-card { margin-bottom: 0.75rem; }
+
+/* 6. Estatísticas Gerais */
+.container-stats {
+  background: #fff; padding: 1rem; border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.container-stats h3 { margin-top: 0; }
+.container-stats .stat-card-group {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  margin-bottom: 1rem;
+}
+.container-stats .temporal-chart-container { height: 200px; margin-bottom: 1rem; }
+
+/* 7. Car legend manual */
+.car-legend {
+  display: flex; gap: 1rem; margin: 0.5rem 0;
+  font-size: 0.85rem; flex-wrap: wrap; justify-content: center;
+}
+.car-legend span {
+  display: inline-block; width: 12px; height: 12px;
+  border-radius: 2px; margin-right: 5px;
+}
+.color-basic   { background-color: #4e79a7; }
+.color-comfort { background-color: #f28e2b; }
+.color-premium { background-color: #e15759; }
+
+/* 8. Perfil dos Motoristas */
+.container-drivers {
+  background: #fff; padding: 1rem; border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+.container-drivers h3 { margin-top: 0; }
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.profile-chart-container { height: 180px; }
+
+/* 9. Legenda/controles Leaflet: z-index menor que o header fixo */
+.info.legend {
+  background: #fff; padding: 10px; border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  z-index: 800 !important;                 /* header = 1000 */
+}
+.info.legend i { float: left; width: 18px; height: 18px; margin-right: 8px; opacity: 0.7; }
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom { z-index: 800 !important; }
+
+/* 10. Rodapé de fonte de dados */
+.data-source {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #555;
+  line-height: 1.3;
+}
+
+/* 11. Responsividade */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "filters"
+      "map"
+      "passengers"
+      "stats"
+      "drivers";
+  }
+  #map { min-height: 250px; }
+  .profile-grid { grid-template-columns: 1fr; }
+}
+

@@ -1,0 +1,57 @@
+/* ====== Header / layout base ====== */
+:root{ --header-h:60px; }
+
+header.top{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 16px; background:#003f7d; color:#fff;
+  position:sticky; top:0; z-index:1000; height:var(--header-h);
+}
+header.top .logo{ height:48px; width:auto }
+header.top h1{ margin:0; font-size:18px; font-weight:600 }
+header.top .hamburger{
+  margin-left:auto; background:transparent; border:0; color:#fff;
+  font-size:1.6rem; cursor:pointer; z-index:1001;
+}
+
+/* Sidebar */
+#sideMenu{
+  position:fixed; left:0; top:var(--header-h);  /* abaixo do header */
+  width:260px; height:calc(100vh - var(--header-h));
+  background:#003f7d; color:#fff;
+  transform:translateX(-100%); transition:transform .25s ease;
+  z-index:900;  /* abaixo do header */
+  overflow-y:auto;
+}
+#sideMenu.open{ transform:translateX(0); }
+
+#sideMenu ul{ list-style:none; margin:0; padding:8px 0; }
+#sideMenu li a{
+  display:block; padding:.8rem 1rem;
+  text-decoration:none; color:#fff;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  font: 14px/1.4 "Source Sans Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+#sideMenu li a:hover, #sideMenu li a.active{ background:#0052a4; }
+
+/* Conteúdo */
+main.wrapper{ max-width:1400px; margin:0 auto; padding:16px; transition:margin-left .25s ease; background:#f7f9fc; }
+main.wrapper.shifted{ margin-left:260px; }
+
+.grid{ display:grid; grid-template-columns:320px 1fr; gap:16px; }
+.card{
+  background:#fff; border:1px solid #e6ecf2; border-radius:12px;
+  padding:16px; box-shadow:0 1px 2px rgba(16,24,40,.04);
+}
+.panel{ margin-bottom:16px }
+.title{ font-size:18px; color:#003f7d; margin:0 0 8px; font-weight:600 }
+.muted{ color:#6c7a89; font-size:13px }
+.kpi{ display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin-top:8px }
+.kpi .item{ border:1px solid #e6ecf2; border-radius:10px; padding:10px 12px; background:#fff }
+.kpi .item b{ display:block; font-size:14px; margin-bottom:2px; color:#0f172a }
+
+
+/* Responsividade */
+@media (max-width: 980px){
+  main.wrapper.shifted{ margin-left:0; }
+}
+

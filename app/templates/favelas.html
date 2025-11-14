@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Análise de Redlining</title>
+
+  <!-- Fontes e CSS da UNIRIO -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://satccet.uniriotec.br/ccet/barrasccet.css" media="screen" />
+
+
+  <!-- Bibliotecas adicionais -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css" />
+
+  <style>
+      /* Reset e estilos base */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Source Sans Pro', Arial, sans-serif;
+        background-color: #fff;
+        color: #333;
+        line-height: 1.6;
+      }
+
+      /* Header fixo */
+      header {
+        width: 100%;
+        height: 60px;
+        background-color: #003f7d;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1100;
+      }
+      header img.logo {
+        height: 40px;
+        margin-right: 1rem;
+      }
+      header h1 {
+        font-size: 1.2rem;
+        font-weight: normal;
+      }
+
+      /* Menu hamburger */
+      .hamburger {
+        margin-left: auto;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: block;
+        z-index: 1001;
+      }
+
+      /* Menu lateral */
+      nav#sideMenu {
+        width: 250px;
+        background-color: #003f7d;
+        color: #fff;
+        height: calc(100vh - 60px);
+        position: fixed;
+        top: 60px;
+        left: 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+        overflow-y: auto;
+      }
+      nav#sideMenu.open {
+        transform: translateX(0);
+      }
+      nav#sideMenu ul {
+        list-style: none;
+        margin-top: 60px;
+      }
+      nav#sideMenu ul li a {
+        display: block;
+        padding: 0.8rem 1rem;
+        text-decoration: none;
+        color: #fff;
+        border-bottom: 1px solid #222;
+      }
+      nav#sideMenu ul li a:hover, nav#sideMenu ul li a.active {
+        background-color: #0052a4;
+      }
+
+      /* Conteúdo principal */
+      .main-content {
+        margin-top: 60px;
+        transition: margin-left 0.3s 0.3s ease-in-out;
+      }
+      .main-content.shifted {
+        margin-left: 250px;
+      }
+
+      /* Container de conteúdo */
+      .container-content {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      /* Grid do dashboard */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 15px;
+        grid-auto-rows: minmax(100px, auto);
+      }
+
+      /* Containers */
+      .container {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 15px;
+        margin-bottom: 20px;
+        overflow: visible;
+      }
+
+      /* Filtros */
+      .container-filters {
+        grid-column: span 3;
+        min-width: 300px;
+      }
+      .container-map {
+        grid-column: span 9;
+      }
+      .container-stats {
+        grid-column: span 3;
+        min-width: 300px;
+      }
+      .container-addresses {
+        grid-column: span 9;
+      }
+      .container-graph {
+        grid-column: span 6;
+        min-height: 320px; /* Altura mínima aumentada */
+      }
+      .container-table {
+        grid-column: span 5;
+        min-height: 400px;
+        overflow-x: auto;
+      }
+
+      /* Gráfico de endereços */
+      #containerTopAddr {
+        grid-column: span 7;
+      }
+      #containerTopAddr .chart-container {
+        height: 280px;
+        margin-bottom: 10px;
+      }
+
+      /* Container específico para Top Favelas */
+      #containerTopFav {
+        grid-column: span 4;
+      }
+
+      /* Container específico para Taxa de Cancelamento por Distância */
+      #containerDistChart {
+        grid-column: span 5;
+      }
+
+      /* Ajustes para os gráficos dentro dos containers */
+      .container-graph .chart-container {
+        height: 280px; /* Altura reduzida para melhor proporção */
+        position: relative;
+        margin: 0 auto;
+        width: 95%; /* Largura reduzida para evitar compressão */
+      }
+
+      /* Melhorias na legenda dos gráficos */
+      .chartjs-legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .chartjs-legend li {
+        display: inline-block;
+        margin: 0 10px;
+      }
+
+      /* Formulários */
+      form {
+        margin-bottom: 1rem;
+      }
+      form label {
+        display: block;
+        margin: 0.5rem 0 0.2rem;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+      form select, form input {
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button[type="submit"] {
+        background-color: #003f7d;
+        color: #fff;
+        border: none;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+        width: 100%;
+      }
+      button[type="submit"]:hover {
+        background-color: #0052a4;
+      }
+
+      /* Títulos */
+      h2 {
+        margin: 1rem 0;
+        color: #003f7d;
+        font-size: 1.3rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+      }
+      h3 {
+        margin: 0.5rem 0;
+        color: #003f7d;
+        font-size: 1.1rem;
+      }
+
+      /* Cartões de estatísticas */
+      .stat-card {
+        background: #f9f9f9;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid #003f7d;
+      }
+      .stat-card p {
+        margin: 0.3rem 0;
+        font-size: 0.9rem;
+      }
+      .stat-card strong {
+        color: #003f7d;
+      }
+
+      /* Mapa */
+      #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 6px;
+      }
+      .map-instructions {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      /* Tabelas */
+      .dataTables_wrapper {
+        margin-top: 10px;
+        font-size: 0.85rem;
+      }
+      table.dataTable {
+        width: 100% !important;
+        margin: 10px 0 !important;
+      }
+      #topAddressesTable th, #topAddressesTable td {
+        padding: 4px 8px;
+        white-space: nowrap;
+      }
+      .dataTables_scrollBody {
+        border-bottom: none !important;
+      }
+
+      /* Gráficos */
+      .chart-container {
+        height: 300px;
+        margin: 15px 0;
+        position: relative;
+      }
+      .chart-container canvas {
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      /* Loading */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+      }
+      .loading-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #003f7d;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 10px auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Responsividade */
+      @media (max-width: 1200px) {
+        .dashboard-grid {
+          grid-template-columns: repeat(6, 1fr);
+        }
+        .container-filters, .container-map,
+        .container-stats, .container-addresses,
+        .container-graph, .container-table,
+        .container-graph, #containerTopFav, #containerDistChart {
+          grid-column: span 12 !important; /* Ocupa toda a largura em telas menores */
+        }
+        #containerTopAddr {
+          grid-column: span 6 !important;
+        }
+        .container-graph .chart-container {
+          height: 300px;
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+        .container-filters, .container-map,
+        .container-stats, .container-addresses,
+        .container-graph, .container-table,
+        #containerTopAddr {
+          grid-column: span 1 !important;
+        }
+        .container-graph .chart-container {
+          height: 250px;
+        }
+      }
+
+      /* Melhorias específicas para DataTables */
+      .dataTables_filter input {
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .dataTables_paginate .paginate_button {
+        padding: 5px 10px;
+        margin: 0 2px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .dataTables_paginate .paginate_button.current {
+        background: #003f7d;
+        color: white !important;
+      }
+      .dataTables_info {
+        padding-top: 10px;
+      }
+
+      /* Ajustes para tooltips dos gráficos */
+      .chartjs-tooltip {
+        background: rgba(0, 63, 125, 0.9);
+        color: white;
+        border-radius: 4px;
+        padding: 8px;
+        font-size: 12px;
+        pointer-events: none;
+      }
+
+      /* ===== Legend (Leaflet) ===== */
+      .info.legend {
+        background: #fff;
+        padding: 8px 10px;
+        border-radius: 6px;
+        box-shadow: 0 1px 6px rgba(0,0,0,.2);
+        font-size: 0.9rem;
+        line-height: 1.2;
+      }
+      .info.legend h4 {
+        margin: 0 0 6px 0;
+        font-weight: 600;
+        color: #003f7d;
+      }
+      .info.legend .legend-section { margin-top: 6px; }
+      .info.legend .legend-title {
+        font-weight: 600;
+        margin: 6px 0 4px 0;
+      }
+      .info.legend i {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+        border-radius: 2px;
+        vertical-align: -2px;
+      }
+
+      .info.legend .legend-gradient { height: 12px; width: 120px; border-radius: 2px; margin: 4px 0; }
+      .info.legend .legend-gradient.red  { background: linear-gradient(to right, #fde0dd, #d73027); }
+      .info.legend .legend-gradient.blue { background: linear-gradient(to right, #deebf7, #4575b4); }
+      .info.legend .legend-gradient.gray { background: linear-gradient(to right, #d9d9d9, #000000); }
+      .info.legend .legend-scale { display: flex; justify-content: space-between; font-size: .75rem; color: #666; }
+
+
+      /* ===== Fontes do mapa ===== */
+      .map-sources {
+        font-size: 0.8rem;
+        color: #555;
+        margin-top: 8px;
+      }
+      .map-sources .src-title {
+        font-weight: 600;
+        color: #003f7d;
+      }
+
+
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <img class="logo" src="{{ url_for('static', filename='images/logo_unirio.png') }}" alt="Logo UNIRIO" />
+    <h1>PPGI - Análise de Redlining em plataformas de corrida compartilhada</h1>
+    <button class="hamburger">☰</button>
+  </header>
+
+  <!-- Menu lateral -->
+  <nav id="sideMenu">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/info_geral/">Informações Gerais</a></li>
+      <li><a href="/analise_comentarios/">Análise de Comentários</a></li>
+      <li><a href="/analise_reclame_aqui/">Análise do Reclame Aqui</a></li>
+      <li><a href="/favelas/" class="active">Análise de Redlining</a></li>
+      <li><a href="/mapa_ocorrencias/">Impacto dos Eventos na Cidade</a></li>
+      <li><a href="/impacto_violencia/">Impacto da Violência na Cidade</a></li>
+    </ul>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <div id="mainContent" class="main-content">
+    <div class="container-content">
+      <div class="dashboard-grid">
+        <!-- Linha 1 -->
+        <!-- Container 1: Filtros -->
+        <div class="container container-filters">
+          <h2>Filtros</h2>
+          <form method="get" action="{{ url_for('favelas_app.index') }}" id="filters-form">
+            <label for="zone">Zona:</label>
+            <select name="zone" id="zone-select">
+              <option value="">Todas as zonas</option>
+              {% for z in zones %}
+                <option value="{{ z }}" {% if filters.zone==z %}selected{% endif %}>{{ z }}</option>
+              {% endfor %}
+            </select>
+
+            <label for="neighborhood">Bairro:</label>
+            <select name="neighborhood" id="neighborhood-select">
+              <option value="">Todos os bairros</option>
+              {% if filters.zone and zone_neighborhoods[filters.zone] %}
+                {% for b in zone_neighborhoods[filters.zone] %}
+                  <option value="{{ b }}" {% if filters.neighborhood==b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+
+            <label for="favela">Favela:</label>
+            <select name="favela" id="favela-select">
+              <option value="">Todas as favelas</option>
+              {% if filters.neighborhood and neighborhood_favelas[filters.neighborhood] %}
+                {% for f in neighborhood_favelas[filters.neighborhood] %}
+                  <option value="{{ f }}" {% if filters.favela==f %}selected{% endif %}>{{ f }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+
+            <label for="status">Status da Corrida:</label>
+            <select name="status">
+              <option value="">Todos os status</option>
+              <option value="completed" {% if filters.status=='completed' %}selected{% endif %}>Finalizadas</option>
+              <option value="driver_cancel" {% if filters.status=='driver_cancel' %}selected{% endif %}>Cancel. Motorista</option>
+              <option value="passenger_cancel" {% if filters.status=='passenger_cancel' %}selected{% endif %}>Cancel. Passageiro</option>
+            </select>
+
+            <label for="start_date">Data Início:</label>
+            <input type="date" name="start_date" value="{{ filters.start_date }}"/>
+
+            <label for="end_date">Data Fim:</label>
+            <input type="date" name="end_date" value="{{ filters.end_date }}"/>
+
+            <label for="start_time">Hora Início:</label>
+            <input type="time" name="start_time" value="{{ filters.start_time }}"/>
+
+            <label for="end_time">Hora Fim:</label>
+            <input type="time" name="end_time" value="{{ filters.end_time }}"/>
+
+            <label for="raio">Distância até o perímetro da favela (em km):</label>
+            <input type="range" id="raio" name="raio" min="0.01" max="1.0" step="0.01"
+                   value="{{ filters.raio }}" oninput="updateRadiusValue(this.value)"/>
+            <output id="raio-value">{{ filters.raio }}</output> km
+
+            <button type="submit" id="apply-filters" class="btn btn-primary w-100">Aplicar filtros</button>
+          </form>
+        </div>
+
+        <!-- Container 2: Mapa -->
+        <div class="container container-map">
+          <h2>Mapa de Redlining</h2>
+          <div id="map"></div>
+          <p class="map-instructions">Clique em uma zona ou bairro para filtrar os dados</p>
+          <!-- Fontes do Mapa -->
+          <div class="map-sources">
+            <div class="src-title">Fontes de dados</div>
+            <div>• <strong>Fonte dos bairros:</strong> IBGE — “Censo 2022: População e domicílios por bairros (dados preliminares)”.</div>
+            <div>• <strong>Fonte identificação das Favelas:</strong> DATA.RIO — “Limite Favelas 2019” — Prefeitura da Cidade do Rio de Janeiro.</div>
+          </div>
+        </div>
+
+        <!-- Linha 2 -->
+        <!-- Container 3: Estatísticas -->
+        <div class="container container-stats">
+          <h2>Estatísticas de Cancelamento</h2>
+
+          <div class="stat-card">
+            <p>Total de corridas analisadas: <strong>{{ stats.total }}</strong></p>
+            <p>Corridas próximas a favelas:
+              <strong>
+                {{ stats.near_favela }}
+                ({{ stats.near_pct|default(0)|round(1) }}%)
+              </strong>
+            </p>
+            <p>Distância média até a favela:
+              <strong>{{ spatial.avg_distance|default(0)|round(1) }} m</strong>
+            </p>
+          </div>
+
+          <!-- Cancelamentos por Motorista -->
+          <div class="stat-card">
+            <p>Canceladas pelo motorista:
+              <strong>
+                {{ stats.driver }}
+                ({{ stats.driver_pct|default(0)|round(1) }}%)
+              </strong>
+            </p>
+            <p>🏆 Favela com maior taxa:
+              <span class="top-favela" data-type="driver">
+                {{ stats.top_driver_favela or 'N/A' }}
+                ({{ (stats.favela_stats.top_driver[0][1] * 100 if stats.favela_stats.top_driver and stats.favela_stats.top_driver[0] else 0)|round(1) }}%)
+                <br>
+                <small>{{ stats.favela_stats_all[stats.top_driver_favela].driver if stats.top_driver_favela and stats.favela_stats_all.get(stats.top_driver_favela) else 0 }} cancel. de {{ stats.favela_stats_all[stats.top_driver_favela].total if stats.top_driver_favela and stats.favela_stats_all.get(stats.top_driver_favela) else 0 }} corridas</small>
+              </span>
+            </p>
+            <p>⏱️ Horário de pico:
+              <span class="top-hour" data-type="driver">
+                {{ stats.top_driver_hour or 'N/A' }}h
+                ({{ (stats.hourly_stats.top_driver[0][1] * 100 if stats.hourly_stats.top_driver and stats.hourly_stats.top_driver[0] else 0)|round(1) }}%)
+                <br>
+                <small>{{ (stats.hourly_stats.top_driver[0][0] if stats.hourly_stats.top_driver and stats.hourly_stats.top_driver[0] else '') }}</small>
+              </span>
+            </p>
+          </div>
+
+          <!-- Cancelamentos por Passageiro -->
+          <div class="stat-card">
+            <p>Canceladas pelo passageiro:
+              <strong>
+                {{ stats.passenger }}
+                ({{ stats.passenger_pct|default(0)|round(1) }}%)
+              </strong>
+            </p>
+            <p>🏆 Favela com maior taxa:
+              <span class="top-favela" data-type="passenger">
+                {{ stats.top_passenger_favela or 'N/A' }}
+                ({{ (stats.favela_stats.top_passenger[0][1] * 100 if stats.favela_stats.top_passenger and stats.favela_stats.top_passenger[0] else 0)|round(1) }}%)
+                <br>
+                <small>{{ stats.favela_stats_all[stats.top_passenger_favela].passenger if stats.top_passenger_favela and stats.favela_stats_all.get(stats.top_passenger_favela) else 0 }} cancel. de {{ stats.favela_stats_all[stats.top_passenger_favela].total if stats.top_passenger_favela and stats.favela_stats_all.get(stats.top_passenger_favela) else 0 }} corridas</small>
+              </span>
+            </p>
+            <p>⏱️ Horário de pico:
+              <span class="top-hour" data-type="passenger">
+                {{ stats.top_passenger_hour or 'N/A' }}h
+                ({{ (stats.hourly_stats.top_passenger[0][1] * 100 if stats.hourly_stats.top_passenger and stats.hourly_stats.top_passenger[0] else 0)|round(1) }}%)
+                <br>
+                <small>{{ (stats.hourly_stats.top_passenger[0][0] if stats.hourly_stats.top_passenger and stats.hourly_stats.top_passenger[0] else '') }}</small>
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Container 4: Top Favelas -->
+        <div class="container container-graph" id="containerTopFav">
+          <h2>Top Favelas por Cancelamentos</h2>
+          <div class="chart-container">
+            <canvas id="chartTopFav"></canvas>
+          </div>
+        </div>
+
+        <!-- Container 5: Taxa de Cancelamento por Distância -->
+        <div class="container container-graph" id="containerDistChart">
+          <h2>Taxa de Cancelamento por Distância Média</h2>
+          <div class="chart-container">
+            <canvas id="chartDist"></canvas>
+          </div>
+        </div>
+
+        <!-- Linha 3 -->
+        <!-- Container 6: Endereços -->
+        <div class="container" style="grid-column: span 8;">
+          <h2>Endereços com Maior Taxa de Cancelamento</h2>
+          <div class="chart-container" style="height:360px;">
+            <canvas id="chartTopAddr"></canvas>
+          </div>
+        </div>
+
+        <!-- Container 7: Tabela de Top Endereços -->
+        <div class="container container-table" style="grid-column: span 4;">
+          <h2>Top 5 Endereços por Região da Cidade</h2>
+          <div class="table-responsive">
+            <table id="topAddressesTable" class="display" style="width:100%">
+              <thead>
+                <tr>
+                  <th>Zona</th>
+                  <th>Endereço</th>
+                  <th>Favela</th>
+                  <th>Distância média (m)</th>
+                  <th>Taxa Motorista</th>
+                  <th>Taxa Passageiro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in top_addresses %}
+                  <tr>
+                    <td>{{ item.zone }}</td>
+                    <td>{{ item.address }}</td>
+                    <td>{{ item.favela }}</td>
+                    <td>{{ item.distance|default(0)|round(1) }}</td>
+                    <td>{{ (item.driver_rate * 100)|default(0)|round(1) }}%</td>
+                    <td>{{ (item.passenger_rate * 100)|default(0)|round(1) }}%</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-text">Carregando dados...</div>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+
+  <!-- Inicialização -->
+  <script>
+      // Inicialização do menu
+      document.addEventListener('DOMContentLoaded', function() {
+        const menu = document.getElementById('sideMenu');
+        const hamburger = document.querySelector('.hamburger');
+
+        hamburger.addEventListener('click', function() {
+          menu.classList.toggle('open');
+          document.querySelector('.main-content').classList.toggle('shifted');
+          hamburger.classList.toggle('is-active');
+        });
+      });
+  </script>
+
+  <!-- JavaScript Libraries - jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- JavaScript Libraries -  -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.14.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+  <!-- JavaScripts customizados -->
+  <script src="{{ url_for('static', filename='scripts/favelas_main.js') }}"></script>
+  <script src="{{ url_for('static', filename='scripts/favelas_map.js') }}"></script>
+  <script src="{{ url_for('static', filename='scripts/favelas_charts.js') }}"></script>
+  <script src="https://satccet.uniriotec.br/ccet/barrasccet.js" type="text/javascript"></script>
+
+  <script>
+      // Inicialização do dashboard após o carregamento da página
+      document.addEventListener('DOMContentLoaded', function() {
+        const appData = {
+          bairros_geo: {{ bairros_geo|tojson|safe }},
+          favelas_geo: {{ favelas_geo|tojson|safe }},
+          zone_neighborhoods: {{ zone_neighborhoods|tojson|safe }},
+          neighborhood_favelas: {{ neighborhood_favelas|tojson|safe }},
+          stats: {{ stats|tojson|safe }},
+          filters: {{ filters|tojson|safe }},
+          distance_bins: {{ distance_bins|tojson|safe if distance_bins is defined else '[]' }},
+          top_addresses: {{ top_addresses|tojson|safe if top_addresses is defined else '[]' }},
+          top_favelas: {{ top_favelas|tojson|safe if top_favelas is defined else '[]' }}
+        };
+
+        // Verificação segura
+        if (window.initFavelasDashboard) initFavelasDashboard(appData);
+        if (window.initFavelasMap) initFavelasMap(appData);
+        if (window.initFavelasCharts) initFavelasCharts(appData);
+      });
+  </script>
+    
+
+ <!-- Formatação da tabela -->
+  <script>
+    $(document).ready(function() {
+      $('#topAddressesTable').DataTable({
+        paging: true,
+        pageLength: 5,
+        lengthChange: false,
+        ordering: true,
+        order: [[0, 'asc']],
+        responsive: true,
+        scrollX: true,
+        language: {
+          paginate: {
+            previous: 'Anterior',
+            next: 'Próximo'
+          },
+          info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+          infoEmpty: "Sem registros para exibir"
+        },
+        dom: '<"top"f>rt<"bottom"lip><"clear">',
+        columnDefs: [
+          { targets: [1, 2], width: '25%' }, // Ajusta largura das colunas de endereço e favela
+          { targets: [3, 4, 5], width: '15%' } // Ajusta largura das colunas numéricas
+        ]
+      });
+    });
+  </script>
+
+</body>
+</html>

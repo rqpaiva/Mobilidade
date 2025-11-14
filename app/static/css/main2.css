@@ -1,0 +1,56 @@
+/* === Base tipografia e containers === */
+:root{
+  --azul:#003f7d; --azul-escuro:#002a52; --cinza-borda:#e6ecf2; --cinza-texto:#6c7a89;
+  --radius:12px;
+}
+html,body{font-family:"Source Sans Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+h1,h2,h3{font-weight:600;color:var(--azul)}
+.card{background:#fff;border:1px solid var(--cinza-borda);border-radius:var(--radius);padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.title{margin:0 0 8px}
+
+/* === Form padrão === */
+.form-group{margin-bottom:10px}
+.form-group label{font-size:.9rem;color:#0f172a;display:block;margin-bottom:4px}
+input[type="date"], input[type="text"], select{
+  width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;
+}
+input[type="range"]{width:100%}
+.range-row{display:flex;align-items:center;gap:8px}
+.range-row span{min-width:64px;color:#0f172a}
+.muted{color:var(--cinza-texto);font-size:.85rem}
+
+/* Botões */
+.btn{display:inline-block;border:0;border-radius:8px;padding:.6rem .9rem;cursor:pointer}
+.btn-primary{background:var(--azul);color:#fff}
+.btn-primary:hover{background:var(--azul-escuro)}
+
+/* KPI cards */
+.kpi{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi .item{border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 12px}
+.kpi .item b{display:block;color:#0f172a}
+
+/* Tabelas HTML */
+.table-unirio{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--cinza-borda);border-radius:10px;overflow:hidden}
+.table-unirio thead th{background:var(--azul);color:#fff;text-align:left;padding:10px}
+.table-unirio tbody td{padding:10px;border-top:1px solid var(--cinza-borda)}
+.table-unirio tbody tr:nth-child(even){background:#fafcff}
+
+/* Grid & alinhamento com o mapa */
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+aside.card#filtersCard{height:100%}
+.container-map-equal{display:flex;flex-direction:column}
+.container-map-equal .map-host{min-height:520px}
+
+/* ==== Cartões de estatísticas ==== */
+.stats-cards{
+  display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:6px;
+}
+.stat-card{
+  background:#f8fbff; border:1px solid var(--cinza-borda); border-radius:10px;
+  padding:12px 14px; box-shadow:0 1px 2px rgba(16,24,40,.04);
+}
+.stat-card .stat-title{ margin:0 0 6px; font-weight:700; color:#0f172a; }
+.stat-card .stat-value{ color:#0f172a; }
+.stat-card small{ color:var(--cinza-texto); }
+
+

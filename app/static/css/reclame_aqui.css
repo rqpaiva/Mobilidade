@@ -1,0 +1,167 @@
+/* Estilos específicos para a página de análise do Reclame Aqui */
+
+/* Ajustes para cards de reclamação */
+.complaint-card {
+  margin-bottom: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.complaint-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.complaint-card .card-header {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.complaint-card .card-body {
+  padding: 15px;
+}
+
+.comment-text {
+  white-space: pre-wrap;
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  border-left: 3px solid #6c757d;
+}
+
+/* Badges para categorias */
+.category-badge {
+  margin-right: 5px;
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+}
+
+/* Ajustes para responsividade */
+@media (max-width: 768px) {
+  .complaint-card .row > div {
+    margin-bottom: 15px;
+  }
+
+  .complaint-card .card-header h5 {
+    font-size: 1rem;
+  }
+}
+
+/* Estilo para gráficos */
+.chart-container {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.chart-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+.card-header h5 {
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.section-card {
+  margin-bottom: 2rem;
+}
+
+/* Melhorar visual dos gráficos */
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 25px;
+}
+
+.chart-container img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+/* Estilos consistentes com a análise de comentários */
+.chart-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    height: 400px;
+}
+
+.chart-container h6 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #003f7d;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Ajustes para cards de reclamação crítica */
+.critical-complaint {
+    border-left: 4px solid #dc3545;
+}
+
+.critical-complaint .card-header {
+    background-color: #fff5f5;
+}
+
+/* Badges para categorias de problemas */
+.problem-badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+}
+
+/* Melhorias na responsividade */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 300px;
+    }
+
+    .complaint-card .row > div {
+        margin-bottom: 15px;
+    }
+}
+
+/* Garantir que gráficos tenham altura fixa */
+.chart-container {
+    position: relative;
+    height: 400px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+}
+
+/* Estilo para reclamações críticas */
+.critical-complaint {
+    border-left: 4px solid #dc3545;
+    background-color: #fff5f5;
+}
+
+.critical-complaint .card-header {
+    background-color: #ffe6e6;
+}
+
+/* Destaque para reclamações de motoristas */
+.driver-complaint {
+    border-left: 4px solid #007bff;
+    background-color: #f0f8ff;
+}
+
+.driver-complaint .card-header {
+    background-color: #e3f2fd;
+}

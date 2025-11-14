@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard para análise de cancelamentos em plataformas de corrida compartilhada</title>
+
+  <!-- Fontes e CSS da UNIRIO -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://satccet.uniriotec.br/ccet/barrasccet.css" media="screen" />
+
+  <!-- Preconnect para fontes (opcional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
+
+  <style>
+    /* Reset básico */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Source Sans Pro', Arial, sans-serif;
+      background-color: #fff;
+      color: #333;
+    }
+
+    /* Header fixo no topo */
+    header {
+      width: 100%;
+      height: 60px;
+      background-color: #003f7d; /* Azul UNIRIO */
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    header img.logo {
+      height: 40px;
+      margin-right: 1rem;
+    }
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: normal;
+    }
+
+    /* Botão “hamburger” sempre visível para abrir/fechar o menu */
+    .hamburger {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* Menu lateral colapsável */
+    nav#sideMenu {
+      width: 250px;
+      background-color: #003f7d;
+      color: #fff;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      transform: translateX(-100%); /* começa “fechado” */
+      transition: transform 0.3s ease;
+      z-index: 999;
+      overflow-y: auto;
+    }
+    nav#sideMenu.open {
+      transform: translateX(0); /* quando aberto, desliza para dentro */
+    }
+    nav#sideMenu ul {
+      list-style: none;
+      margin-top: 60px; /* para não ficar atrás do header */
+    }
+    nav#sideMenu ul li a {
+      display: block;
+      padding: 0.8rem 1rem;
+      text-decoration: none;
+      color: #fff;
+      border-bottom: 1px solid #222;
+    }
+    nav#sideMenu ul li a:hover {
+      background-color: #0052a4;
+    }
+
+    /* Área principal */
+    .main-content {
+      margin-top: 60px; /* espaço para o header fixo */
+      transition: margin-left 0.3s ease;
+    }
+    /* Quando o menu está aberto, empurramos o conteúdo */
+    .main-content.shifted {
+      margin-left: 250px;
+    }
+
+    /* Container para o conteúdo interno (imagem, upload etc.) */
+    .container-content {
+      padding: 20px;
+    }
+    .v5_3 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    /* Seção de Upload */
+    .container-upload {
+      margin-top: 2rem;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+    .icon-upload {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    .custom-file-label {
+      display: block;
+      background-color: #003f7d;
+      color: #fff;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #fileInput {
+      display: none; /* para estilizar o input via label */
+    }
+    .buttonSubmit {
+      display: block;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background-color: #0052a4;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Imagem principal (caso queira exibir no index) */
+    .v15_30 img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <img class="logo" src="{{ url_for('static', filename='images/logo_unirio.png') }}" alt="Logo UNIRIO" />
+    <h1>UNIRIO - Universidade Federal do Estado do Rio de Janeiro</h1>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+  </header>
+
+  <!-- Menu lateral -->
+  <nav id="sideMenu">
+    <ul>
+      <li><a href="/" class="active">Home</a></li>
+      <li><a href="/info_geral/">Informações Gerais</a></li>
+      <li><a href="/analise_comentarios/">Análise de Comentários</a></li>
+      <li><a href="/analise_reclame_aqui/">Análise do Reclame Aqui</a></li>
+      <li><a href="/favelas/">Análise de Redlining</a></li>
+      <li><a href="/mapa_ocorrencias/">Impacto dos Eventos na Cidade</a></li>
+      <li><a href="/impacto_violencia/">Impacto da Violência na Cidade</a></li>
+    </ul>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <div id="mainContent" class="main-content">
+    <div class="container-content">
+      <!-- Título principal -->
+      <span class="v5_3">Dashboard para análise de cancelamentos em plataformas de corrida compartilhada</span>
+
+      <!-- Imagem (se desejado) -->
+      <div class="v15_30">
+        <img src="{{ url_for('static', filename='images/eccb17e445d1417595732e3a62df4f28.jpg') }}" alt="">
+      </div>
+
+      <!-- Seção de Upload -->
+      <div class="container-upload">
+        <form id="uploadForm" action="/upload_csv" method="POST" enctype="multipart/form-data">
+          <div class="icon-upload">⬆</div>
+          <label for="fileInput" class="custom-file-label">Selecionar Arquivo</label>
+          <input type="file" id="fileInput" name="file">
+          <button type="submit" class="buttonSubmit">Upload</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScripts customizados -->
+  <script src="{{ url_for('static', filename='scripts/script.js') }}" defer></script>
+  <script src="https://satccet.uniriotec.br/ccet/barrasccet.js" type="text/javascript"></script>
+
+  <script>
+    function toggleMenu() {
+      const sideMenu = document.getElementById('sideMenu');
+      const mainContent = document.getElementById('mainContent');
+      // Adiciona ou remove a classe .open no menu para deslizar
+      sideMenu.classList.toggle('open');
+      // Adiciona ou remove a classe .shifted no conteúdo para empurrar
+      mainContent.classList.toggle('shifted');
+    }
+  </script>
+</body>
+</html>
